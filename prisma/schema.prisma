@@ -1,0 +1,119 @@
+generator client {
+    provider = "prisma-client-js"
+    binaryTargets = ["native", "linux-musl-arm64-openssl-3.0.x"]
+    output = "/home/ubuntu/foodservice_dpt_app/nextjs_space/node_modules/.prisma/client"
+}
+
+datasource db {
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
+}
+
+enum Categoria {
+  STOCK
+  SEMANAL
+  OTRO
+}
+
+enum EstadoAmasadora {
+  EN_FERMENTACION
+  PENDIENTE_CONFIRMAR
+  COMPLETADA
+}
+
+enum TipoMovimiento {
+  AMASADA
+  AJUSTE
+  CONSUMO
+  CORRECCION
+  COMPRA
+}
+
+model Product {
+  id                      Int       @id @default(autoincrement())
+  nombre                  String
+  categoria               Categoria @default(STOCK)
+  activo                  Boolean   @default(true)
+  margenSeguridadDias     Int       @default(2)
+  margenSeguridadUnidades Int       @default(0)
+  stockActual             Int       @default(0)
+  consumoDiarioDefecto    Int       @default(10)
+  diaSemanal              String?   // for SEMANAL/OTRO: day of week
+  orden                   Int       @default(0)
+
+  planificaciones         PlanificacionDia[]
+  amasadoras              Amasadora[]
+  movimientos             MovimientoInventario[]
+  ordenTrabajo            OrdenTrabajoItem[]
+
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+}
+
+model PlanificacionDia {
+  id          Int      @id @default(autoincrement())
+  productoId  Int
+  fecha       DateTime @db.Date
+  desayuno    Int      @default(0)
+  comida      Int      @default(0)
+  extra       Int      @default(0)
+  esExcepcion Boolean  @default(false)
+
+  producto    Product  @relation(fields: [productoId], references: [id], onDelete: Cascade)
+
+  @@unique([productoId, fecha])
+  @@index([fecha])
+}
+
+model Amasadora {
+  id               Int              @id @default(autoincrement())
+  productoId       Int
+  fechaInicio      DateTime         @db.Date
+  estado           EstadoAmasadora  @default(EN_FERMENTACION)
+  piezasProducidas Int?
+
+  producto         Product          @relation(fields: [productoId], references: [id], onDelete: Cascade)
+
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+}
+
+model MovimientoInventario {
+  id         Int            @id @default(autoincrement())
+  productoId Int
+  fecha      DateTime       @db.Date
+  cantidad   Int
+  tipo       TipoMovimiento
+  notas      String?
+
+  producto   Product        @relation(fields: [productoId], references: [id], onDelete: Cascade)
+
+  createdAt  DateTime       @default(now())
+
+  @@index([productoId, fecha])
+}
+
+model AppConfig {
+  id    Int    @id @default(autoincrement())
+  clave String @unique
+  valor String
+}
+
+model NotaDia {
+  id      Int      @id @default(autoincrement())
+  fecha   DateTime @db.Date
+  nota    String
+
+  @@unique([fecha])
+}
+
+model OrdenTrabajoItem {
+  id          Int      @id @default(autoincrement())
+  productoId  Int
+  fecha       DateTime @db.Date
+  completado  Boolean  @default(false)
+
+  producto    Product  @relation(fields: [productoId], references: [id], onDelete: Cascade)
+
+  @@unique([productoId, fecha])
+}
