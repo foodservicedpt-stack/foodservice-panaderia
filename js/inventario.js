@@ -1,7 +1,7 @@
 import { requireSession } from "./auth.js";
 import { renderNav } from "./nav.js";
 import { getInventario, addMovimiento } from "./data.js";
-import { calcCoverageDays, getStockStatus, formatDateES } from "./utils.js";
+import { calcCoverageDays, getStockStatus, formatCoverageDays, formatDateES } from "./utils.js";
 import { toast } from "./ui.js";
 
 requireSession();
@@ -16,10 +16,17 @@ async function load() {
     .map((p) => {
       const coverageDays = calcCoverageDays(p.stockActual || 0, [], p.consumoDiarioDefecto || 0);
       const status = getStockStatus(coverageDays, p.margenSeguridadDias || 0);
+      const rate = p.consumoDiarioDefecto || 0;
+      const coverageCell = coverageDays === null
+        ? `<span class="badge info">Sin datos</span>`
+        : `<div>
+             <span class="badge ${status}">${formatCoverageDays(coverageDays)}</span>
+             ${rate > 0 ? `<small class="meta-text" style="display:block;margin-top:3px;">a ${rate}/día</small>` : ""}
+           </div>`;
       return `<tr>
         <td data-label="Producto">${p.nombre}</td>
         <td data-label="Stock">${p.stockActual ?? 0}</td>
-        <td data-label="Cobertura"><span class="badge ${status}">${coverageDays} días</span></td>
+        <td data-label="Cobertura">${coverageCell}</td>
         <td data-label="Ajustar">
           <div class="row">
             <input type="number" placeholder="+/- cantidad" aria-label="Cantidad a ajustar" style="width:110px; margin:0;" id="qty-${p.id}" />

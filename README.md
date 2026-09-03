@@ -21,6 +21,18 @@ La interfaz sigue las pautas de las Human Interface Guidelines de Apple, adaptad
 - Iconografía SVG uniforme (estilo SF Symbols) en lugar de emojis, definida en js/ui.js.
 - Superficies translúcidas (glass) sutiles con sombras suaves y radios generosos.
 - Feedback no intrusivo: notificaciones toast() en lugar de alert()/prompt().
+
+## Cálculo de cobertura (días)
+
+La cobertura indica cuántos días durará el stock actual de un producto:
+
+**Cobertura = stock actual ÷ consumo diario del producto**
+
+- El **consumo diario** se configura por producto en **Configuración** (campo "Consumo diario"). Al crear un producto nuevo se usa un valor por defecto de 10 unidades/día.
+- Ejemplo: con 500 unidades y consumo diario 10 → 50 días; con consumo diario 50 → 10 días.
+- Si el producto no tiene consumo diario definido (0), la app muestra "Sin datos" en lugar de dar una alarma falsa.
+- En Inventario y en el Inicio se muestra el ritmo usado (ej. "a 50/día") junto a los días, para que siempre sepas con qué dato se calcula.
+
 ## Primer uso
 La primera vez que alguien entra en `index.html` con una contraseña, esa contraseña se
 guarda como la contraseña del equipo (no hace falta configurarla a mano en Firestore).

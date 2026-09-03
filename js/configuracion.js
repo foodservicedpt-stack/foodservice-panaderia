@@ -15,20 +15,28 @@ async function load() {
   list.innerHTML = productos
     .map(
       (p) => `
-    <div class="list-row">
-      <div class="row" style="flex-wrap:wrap;">
-        <input type="text" value="${p.nombre}" data-field="nombre" data-id="${p.id}" style="width:160px; margin:0;" />
-        <select data-field="categoria" data-id="${p.id}" style="width:110px; margin:0;">
+    <div class="list-row" style="flex-direction:column; align-items:stretch; gap:8px;">
+      <div class="row" style="justify-content:space-between; gap:8px; flex-wrap:wrap;">
+        <input type="text" value="${p.nombre}" data-field="nombre" data-id="${p.id}" style="flex:1; min-width:160px; margin:0;" aria-label="Nombre del producto" />
+        <select data-field="categoria" data-id="${p.id}" style="width:120px; margin:0;" aria-label="Categoría">
           ${Object.entries(CATEGORIAS).map(([k, v]) => `<option value="${k}" ${p.categoria === k ? "selected" : ""}>${v}</option>`).join("")}
         </select>
-        <input type="number" value="${p.margenSeguridadDias ?? 2}" data-field="margenSeguridadDias" data-id="${p.id}" style="width:70px; margin:0;" title="Margen seguridad (días)" />
-        <input type="number" value="${p.consumoDiarioDefecto ?? 10}" data-field="consumoDiarioDefecto" data-id="${p.id}" style="width:90px; margin:0;" title="Consumo diario por defecto" />
         <label class="checkbox-row" style="padding:0;">
           <input type="checkbox" data-field="activo" data-id="${p.id}" ${p.activo !== false ? "checked" : ""} />
           <span>Activo</span>
         </label>
       </div>
-      <button data-id="${p.id}" class="save-btn secondary">Guardar</button>
+      <div class="row" style="gap:14px; align-items:flex-end; flex-wrap:wrap;">
+        <div style="flex:1; min-width:150px;">
+          <label class="field-label" style="margin:0 0 4px;" for="consumo-${p.id}">Consumo diario</label>
+          <input type="number" id="consumo-${p.id}" value="${p.consumoDiarioDefecto ?? 10}" data-field="consumoDiarioDefecto" data-id="${p.id}" style="width:100%; margin:0;" aria-label="Consumo diario (unidades por día)" />
+        </div>
+        <div style="flex:1; min-width:150px;">
+          <label class="field-label" style="margin:0 0 4px;" for="margen-${p.id}">Margen seguridad</label>
+          <input type="number" id="margen-${p.id}" value="${p.margenSeguridadDias ?? 2}" data-field="margenSeguridadDias" data-id="${p.id}" style="width:100%; margin:0;" aria-label="Margen de seguridad (días)" />
+        </div>
+        <button data-id="${p.id}" class="save-btn secondary">Guardar</button>
+      </div>
     </div>`
     )
     .join("") || `<p class="empty">No hay productos todavía</p>`;

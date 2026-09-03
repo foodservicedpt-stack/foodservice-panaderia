@@ -50,24 +50,45 @@ export function getGreeting() {
   return "Buenas noches";
 }
 
+// Cobertura (días) = cuántos días dura el stock actual.
+//   - Recorre los consumos planificados día a día (si los hay).
+//   - Después suma días con el consumo diario medio del producto.
+//   - Devuelve null si hay stock pero no hay ningún dato de consumo (cobertura indeterminada).
 export function calcCoverageDays(stockActual, consumosPlanificados, consumoDiarioDefecto) {
-  let stock = stockActual;
+  const stock = Number(stockActual) || 0;
+  const plan = (consumosPlanificados || []);
+  const defaultConsumo = Number(consumoDiarioDefecto) || 0;
+
+  if (stock <= 0) return 0;
+
+  const hasConsumption = plan.some((c) => Number(c) > 0) || defaultConsumo > 0;
+  if (!hasConsumption) return null;
+
+  let remaining = stock;
   let days = 0;
-  for (const consumo of consumosPlanificados) {
-    if (stock <= 0) break;
-    stock -= consumo;
-    days++;
+  for (const consumo of plan) {
+    if (remaining <= 0) break;
+    const c = Number(consumo) || 0;
+    if (c > 0) { remaining -= c; days++; }
   }
-  if (stock > 0 && consumoDiarioDefecto > 0) {
-    days += Math.floor(stock / consumoDiarioDefecto);
+
+  if (remaining > 0 && defaultConsumo > 0) {
+    days += Math.floor(remaining / defaultConsumo);
   }
   return days;
 }
 
 export function getStockStatus(coverageDays, marginDays) {
+  if (coverageDays === null || coverageDays === undefined) return "info";
   if (coverageDays <= marginDays) return "danger";
   if (coverageDays <= marginDays + 1) return "warning";
   return "ok";
+}
+
+export function formatCoverageDays(days) {
+  if (days === null || days === undefined) return "Sin datos";
+  if (!Number.isFinite(days)) return "∞";
+  return `${days} día${days === 1 ? "" : "s"}`;
 }
 
 export function toDateString(date) {

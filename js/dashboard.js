@@ -1,7 +1,7 @@
 import { requireSession } from "./auth.js";
 import { renderNav } from "./nav.js";
 import { getProductosStock, getAmasadoras, confirmarAmasadora } from "./data.js";
-import { getGreeting, calcCoverageDays, getStockStatus, formatDateES } from "./utils.js";
+import { getGreeting, calcCoverageDays, getStockStatus, formatCoverageDays, formatDateES } from "./utils.js";
 import { toast } from "./ui.js";
 
 requireSession();
@@ -29,11 +29,19 @@ async function load() {
     document.getElementById("alerts-card").style.display = "";
     document.getElementById("alerts-body").innerHTML = alerts
       .map(
-        (p) => `<tr>
-          <td data-label="Producto">${p.nombre}</td>
-          <td data-label="Stock">${p.stockActual}</td>
-          <td data-label="Cobertura"><span class="badge danger">${p.coverageDays} días</span></td>
-        </tr>`
+        (p) => {
+          const rate = p.consumoDiarioDefecto || 0;
+          return `<tr>
+            <td data-label="Producto">${p.nombre}</td>
+            <td data-label="Stock">${p.stockActual}</td>
+            <td data-label="Cobertura">
+              <div>
+                <span class="badge danger">${formatCoverageDays(p.coverageDays)}</span>
+                ${rate > 0 ? `<small class="meta-text" style="display:block;margin-top:3px;">a ${rate}/día</small>` : ""}
+              </div>
+            </td>
+          </tr>`;
+        }
       )
       .join("");
   }
