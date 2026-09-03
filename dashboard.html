@@ -71,6 +71,22 @@
     </div>
   </main>
 
+  <script>
+    window.addEventListener("error", (event) => {
+      const status = document.getElementById("page-status");
+      if (!status || status.classList.contains("error-state")) return;
+      status.className = "error-state";
+      status.textContent = "No se ha podido iniciar la aplicación. Recarga la página.";
+      console.error(event.error || event.message);
+    });
+    window.addEventListener("unhandledrejection", (event) => {
+      const status = document.getElementById("page-status");
+      if (!status || status.classList.contains("error-state")) return;
+      status.className = "error-state";
+      status.textContent = "No se ha podido cargar el inicio. Recarga la página.";
+      console.error(event.reason);
+    });
+  </script>
   <script type="module" src="js/dashboard.js"></script>
 </body>
 </html>
