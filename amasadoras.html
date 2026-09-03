@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Panadería · Amasadoras</title>
 <link rel="stylesheet" href="css/style.css" />
+<meta name="theme-color" content="#d4a574" />
 </head>
 <body>
   <main>
@@ -13,7 +14,7 @@
         <h2>🍞 Amasadoras</h2>
         <button id="nueva-btn">+ Nueva amasadora</button>
       </div>
-      <div id="nueva-form" class="card" style="display:none; background:var(--cream-dark); box-shadow:none;">
+      <div id="nueva-form" class="card" style="display:none; background:var(--bg-glass); box-shadow:none;">
         <label>Producto</label>
         <select id="producto-select"></select>
         <label>Fecha de inicio</label>
@@ -40,5 +41,9 @@
   </main>
 
   <script type="module" src="js/amasadoras.js"></script>
+  <script type="module">
+    import { renderNav } from "./js/nav.js";
+    renderNav("amasadoras.html");
+  </script>
 </body>
 </html>
