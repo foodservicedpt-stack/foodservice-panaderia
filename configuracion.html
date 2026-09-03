@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Panadería · Configuración</title>
 <link rel="stylesheet" href="css/style.css" />
+<meta name="theme-color" content="#d4a574" />
 </head>
 <body>
   <main>
@@ -16,14 +17,18 @@
 
     <div class="card">
       <h3>Cambiar contraseña de equipo</h3>
-      <div class="error-msg" id="pass-error"></div>
-      <div class="success-msg" id="pass-success"></div>
-      <input type="password" id="current-password" placeholder="Contraseña actual" />
-      <input type="password" id="new-password" placeholder="Nueva contraseña" />
+      <div class="error-msg" id="pass-error" role="alert" aria-live="polite"></div>
+      <div class="success-msg" id="pass-success" role="status" aria-live="polite"></div>
+      <input type="password" id="current-password" placeholder="Contraseña actual" aria-label="Contraseña actual" />
+      <input type="password" id="new-password" placeholder="Nueva contraseña" aria-label="Nueva contraseña" />
       <button id="change-pass-btn">Cambiar contraseña</button>
     </div>
   </main>
 
   <script type="module" src="js/configuracion.js"></script>
+  <script type="module">
+    import { renderNav } from "./js/nav.js";
+    renderNav("configuracion.html");
+  </script>
 </body>
 </html>

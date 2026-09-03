@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Panadería · Inventario</title>
 <link rel="stylesheet" href="css/style.css" />
+<meta name="theme-color" content="#d4a574" />
 </head>
 <body>
   <main>
@@ -26,5 +27,9 @@
   </main>
 
   <script type="module" src="js/inventario.js"></script>
+  <script type="module">
+    import { renderNav } from "./js/nav.js";
+    renderNav("inventario.html");
+  </script>
 </body>
 </html>
