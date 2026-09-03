@@ -155,7 +155,7 @@ export async function createAmasadora({ productoId, fechaInicio }) {
   const data = {
     productoId: String(productoId),
     fechaInicio: fecha,
-    estado: "EN_FERMENTACION",
+    estado: "PLANIFICADA",
     piezasProducidas: null,
     createdAt: now,
     updatedAt: now,

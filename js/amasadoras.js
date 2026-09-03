@@ -1,16 +1,39 @@
 import { renderNav } from "./nav.js";
 import { getAmasadoras, createAmasadora, confirmarAmasadora, getProductos } from "./data.js";
-import { formatDateES, toDateString } from "./utils.js";
+import { formatDateES, toDateString, addCalendarDays } from "./utils.js";
 import { escapeHtml, loadWithState, toast } from "./ui.js";
-import { productOption, quantityInput } from "./components.js";
+import { productOption } from "./components.js";
+import { renderAmasadorasInto } from "./amasadoras-ui.js";
 
 renderNav("amasadoras.html");
 
 const ESTADOS = { EN_FERMENTACION: "En fermentación", PENDIENTE_CONFIRMAR: "Pendiente confirmar", COMPLETADA: "Completada" };
 
+let cachedPendientes = [];
+let isConfirming = false;
+
+async function handleConfirm(id, piezas, btn) {
+  const pzs = parseInt(piezas);
+  if (!pzs || pzs <= 0) { toast("Introduce un número válido de piezas", "error"); return; }
+  isConfirming = true;
+  btn.disabled = true;
+  btn.textContent = "Guardando...";
+  try {
+    await confirmarAmasadora({ amasadoraId: id, piezas: pzs });
+    toast("Amasadora registrada", "success");
+    loadWithState(document.getElementById("page-status"), load);
+  } catch (err) {
+    toast("Error: " + err.message, "error");
+    btn.disabled = false;
+    btn.textContent = "Registrar";
+  } finally {
+    isConfirming = false;
+  }
+}
+
 document.getElementById("nueva-btn").addEventListener("click", async () => {
   document.getElementById("nueva-form").hidden = false;
-  document.getElementById("fecha-input").value = toDateString(new Date());
+  document.getElementById("fecha-input").value = toDateString(addCalendarDays(new Date(), 1));
   const select = document.getElementById("producto-select");
   if (!select.options.length) {
     const productos = (await getProductos()).filter((p) => p.activo !== false);
@@ -29,7 +52,7 @@ document.getElementById("crear-btn").addEventListener("click", async () => {
   try {
     await createAmasadora({ productoId, fechaInicio });
     document.getElementById("nueva-form").hidden = true;
-    toast("Amasadora creada", "success");
+    toast("Amasadora programada", "success");
     loadWithState(document.getElementById("page-status"), load);
   } catch (err) {
     toast("Error al crear: " + err.message, "error");
@@ -38,45 +61,10 @@ document.getElementById("crear-btn").addEventListener("click", async () => {
 
 async function load() {
   const amasadoras = await getAmasadoras();
-  const pendientes = amasadoras.filter((a) => a.estado !== "COMPLETADA");
+  cachedPendientes = amasadoras.filter((a) => a.estado !== "COMPLETADA");
   const historial = amasadoras.filter((a) => a.estado === "COMPLETADA");
 
-  const list = document.getElementById("pendientes-list");
-  list.innerHTML =
-    pendientes
-      .map(
-        (a) => `
-      <div class="list-row">
-        <div>
-          <strong>${escapeHtml(a.producto?.nombre || "Producto")}</strong><br/>
-          <span class="meta-text">Iniciada: ${formatDateES(a.fechaInicio)}</span>
-        </div>
-        <div class="row">
-          ${quantityInput({ id: `piezas-${a.id}`, label: "Piezas producidas", min: 1 })}
-          <button data-id="${a.id}" class="confirm-btn" aria-label="Confirmar amasadora">Confirmar</button>
-        </div>
-      </div>`
-      )
-      .join("") || `<p class="empty">No hay amasadoras en curso</p>`;
-
-  list.querySelectorAll(".confirm-btn").forEach((btn) => {
-    btn.addEventListener("click", async () => {
-      const id = btn.dataset.id;
-      const piezas = document.getElementById(`piezas-${id}`).value;
-      if (!piezas || parseInt(piezas) <= 0) { toast("Introduce un número válido de piezas", "error"); return; }
-      btn.disabled = true;
-      btn.textContent = "Guardando...";
-      try {
-        await confirmarAmasadora({ amasadoraId: id, piezas });
-        toast("Amasadora confirmada", "success");
-        loadWithState(document.getElementById("page-status"), load);
-      } catch (err) {
-        toast("Error: " + err.message, "error");
-        btn.disabled = false;
-        btn.textContent = "Confirmar";
-      }
-    });
-  });
+  renderAmasadorasInto(document.getElementById("pendientes-list"), cachedPendientes, new Date(), handleConfirm);
 
   document.getElementById("historial-body").innerHTML =
     historial
@@ -92,3 +80,10 @@ async function load() {
 }
 
 loadWithState(document.getElementById("page-status"), load);
+
+// Refresca el avance de la barra sin volver a pedir datos a Firestore.
+setInterval(() => {
+  if (!isConfirming && cachedPendientes.length) {
+    renderAmasadorasInto(document.getElementById("pendientes-list"), cachedPendientes, new Date(), handleConfirm);
+  }
+}, 30000);

@@ -2,7 +2,7 @@ import { renderNav } from "./nav.js";
 import { getProductosStock, getAmasadoras, confirmarAmasadora } from "./data.js";
 import { getGreeting, calcCoverageDays, getStockStatus, formatCoverageDays, formatDateES } from "./utils.js";
 import { escapeHtml, loadWithState, toast } from "./ui.js";
-import { quantityInput } from "./components.js";
+import { renderAmasadorasInto } from "./amasadoras-ui.js";
 
 renderNav("dashboard.html");
 
@@ -12,6 +12,28 @@ document.getElementById("fecha").textContent = formatDateES(new Date(), {
   day: "numeric",
   month: "long",
 });
+
+let cachedPendientes = [];
+let isConfirming = false;
+
+async function handleConfirm(id, piezas, btn) {
+  const pzs = parseInt(piezas);
+  if (!pzs || pzs <= 0) { toast("Introduce un número válido de piezas", "error"); return; }
+  isConfirming = true;
+  btn.disabled = true;
+  btn.textContent = "Guardando...";
+  try {
+    await confirmarAmasadora({ amasadoraId: id, piezas: pzs });
+    toast("Amasadora registrada", "success");
+    loadWithState(document.getElementById("page-status"), load);
+  } catch (err) {
+    toast("Error al confirmar: " + err.message, "error");
+    btn.disabled = false;
+    btn.textContent = "Registrar";
+  } finally {
+    isConfirming = false;
+  }
+}
 
 async function load() {
   const [products, amasadoras] = await Promise.all([getProductosStock(), getAmasadoras()]);
@@ -45,49 +67,20 @@ async function load() {
       .join("");
   }
 
-  // Amasadoras pendientes
-  const pendientes = amasadoras.filter((a) => a.estado === "EN_FERMENTACION");
+  // Amasadoras en curso (planificada → horneado)
+  const pendientes = amasadoras.filter((a) => a.estado !== "COMPLETADA");
+  cachedPendientes = pendientes;
   if (pendientes.length) {
     document.getElementById("amasadoras-card").hidden = false;
-    const list = document.getElementById("amasadoras-list");
-    list.innerHTML = pendientes
-      .map(
-        (a) => `
-      <div class="list-row">
-        <div>
-          <strong>${escapeHtml(a.producto?.nombre || "Producto")}</strong><br/>
-          <span class="meta-text">Iniciada: ${formatDateES(a.fechaInicio)}</span>
-        </div>
-        <div class="row">
-          ${quantityInput({ id: `piezas-${a.id}`, label: "Piezas producidas", min: 1 })}
-          <button data-id="${a.id}" class="confirm-btn" aria-label="Confirmar amasadora">Confirmar</button>
-        </div>
-      </div>`
-      )
-      .join("");
-
-    list.querySelectorAll(".confirm-btn").forEach((btn) => {
-      btn.addEventListener("click", async () => {
-        const id = btn.dataset.id;
-        const piezas = document.getElementById(`piezas-${id}`).value;
-        if (!piezas || parseInt(piezas) <= 0) {
-          toast("Introduce un número válido de piezas", "error");
-          return;
-        }
-        btn.disabled = true;
-        btn.textContent = "Guardando...";
-        try {
-          await confirmarAmasadora({ amasadoraId: id, piezas });
-          toast("Amasadora confirmada", "success");
-          loadWithState(document.getElementById("page-status"), load);
-        } catch (err) {
-          toast("Error al confirmar: " + err.message, "error");
-          btn.disabled = false;
-          btn.textContent = "Confirmar";
-        }
-      });
-    });
+    renderAmasadorasInto(document.getElementById("amasadoras-list"), pendientes, new Date(), handleConfirm);
   }
 }
 
 loadWithState(document.getElementById("page-status"), load);
+
+// Refresca el avance de la barra sin volver a pedir datos a Firestore.
+setInterval(() => {
+  if (!isConfirming && cachedPendientes.length) {
+    renderAmasadorasInto(document.getElementById("amasadoras-list"), cachedPendientes, new Date(), handleConfirm);
+  }
+}, 30000);

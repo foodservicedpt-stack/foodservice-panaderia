@@ -7,6 +7,13 @@
 <meta name="description" content="Gestión de inventario, planificación y amasadoras del obrador." />
 <link rel="stylesheet" href="css/style.css" />
 <meta name="theme-color" content="#a54a26" />
+<link rel="manifest" href="./manifest.webmanifest" />
+<link rel="icon" href="./icons/icon-192.png" type="image/png" />
+<link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<meta name="apple-mobile-web-app-title" content="Panadería" />
 </head>
 <body>
   <a class="skip-link" href="#main">Saltar al contenido</a>
@@ -26,7 +33,7 @@
     </div>
 
     <div class="card conditional-card" id="amasadoras-card" hidden>
-      <h3>Amasadoras en fermentación</h3>
+      <h3>Amasadoras en curso</h3>
       <div id="amasadoras-list"></div>
     </div>
 
@@ -88,5 +95,6 @@
     });
   </script>
   <script type="module" src="js/dashboard.js"></script>
+<script src="js/pwa.js" defer></script>
 </body>
 </html>

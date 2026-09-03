@@ -15,6 +15,7 @@ const ICONS = {
   x: '<path d="M18 6 6 18M6 6l12 12"/>',
   arrow: '<path d="M5 12h14M13 6l6 6-6 6"/>',
   plus: '<path d="M12 5v14M5 12h14"/>',
+  more: '<circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/>',
 };
 
 export function icon(name, extra = '') {
