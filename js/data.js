@@ -15,7 +15,7 @@ import {
   runTransaction,
 } from "./firebase-config.js";
 import { parseDateString, toDateString } from "./utils.js";
-import { validateMovementInput, validateNonNegativeInteger, validateProductInput } from "./domain.js";
+import { validateMovementInput, validateNonNegativeInteger, validateProductInput, produccionTipo } from "./domain.js";
 
 // ---------- Productos ----------
 
@@ -145,17 +145,21 @@ export async function getAmasadoras() {
   const productosById = Object.fromEntries((await getProductos()).map((p) => [p.id, p]));
   return snap.docs.map((d) => {
     const a = { id: d.id, ...d.data() };
-    return { ...a, producto: productosById[a.productoId] };
+    return { ...a, tipo: a.tipo || "MASAS", nombre: a.nombre || null, producto: productosById[a.productoId] };
   });
 }
 
-export async function createAmasadora({ productoId, fechaInicio }) {
-  if (!productoId) throw new Error("Producto obligatorio");
+export async function createAmasadora({ productoId, fechaInicio, tipo, nombre }) {
+  const def = produccionTipo(tipo || "MASAS");
+  if (def.tracksStock && !productoId) throw new Error("Selecciona un producto");
+  if (!def.tracksStock && !nombre) throw new Error("Pon un nombre a la producción");
   if (fechaInicio) parseDateString(fechaInicio);
   const fecha = fechaInicio ? toDateString(parseDateString(fechaInicio)) : toDateString(new Date());
   const now = new Date().toISOString();
   const data = {
-    productoId: String(productoId),
+    productoId: def.tracksStock ? String(productoId) : null,
+    tipo: def.tipo,
+    nombre: nombre ? String(nombre).trim() : null,
     fechaInicio: fecha,
     estado: "PLANIFICADA",
     piezasProducidas: null,
@@ -192,6 +196,17 @@ export async function confirmarAmasadora({ amasadoraId, piezas }) {
       createdAt: new Date().toISOString(),
     });
   });
+}
+
+export async function cancelarProduccion({ produccionId }) {
+  if (!produccionId) throw new Error("Producción obligatoria");
+  const ref = doc(db, "amasadoras", String(produccionId));
+  await updateDoc(ref, { estado: "CANCELADA", updatedAt: new Date().toISOString() });
+}
+
+export async function eliminarProduccion({ produccionId }) {
+  if (!produccionId) throw new Error("Producción obligatoria");
+  await deleteDoc(doc(db, "amasadoras", String(produccionId)));
 }
 
 // ---------- Orden de trabajo ----------

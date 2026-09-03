@@ -1,21 +1,30 @@
 import { escapeHtml, icon } from "./ui.js";
-import { getAmasadoraStage } from "./domain.js";
+import { getProduccionStage, produccionTipo } from "./domain.js";
 import { formatDateES } from "./utils.js";
 
-const STEP_LABELS = {
-  PLANIFICADA: "Planificada",
-  AMASADO: "Amasado",
-  FERMENTANDO: "Fermentando",
-  HORNEADO: "Horneado",
+const STAGE_LABELS = {
+  MASAS: { PLANIFICADA: "Planificada", AMASADO: "Amasado", FERMENTANDO: "Fermentando", HORNEADO: "Horneado" },
+  PANE_ESPECIAL: { PLANIFICADA: "Planificada", AMASADO: "Amasado", FERMENTANDO: "Fermentando", HORNEADO: "Horneado" },
+  YOGUR: { PREVISION: "Pendiente", PREPARACION: "Preparación", FERMENTACION: "Fermentando", ENVASADO: "Envasado" },
+  HELADO: { PREVISION: "Pendiente", MEZCLA: "Mezcla", MADURACION: "Madurando", SERVICIO: "Servir" },
+  BIZCOCHO: { PREVISION: "Pendiente", PREPARACION: "Preparación", HORNEADO: "Horneado", CONSERVACION: "Conservación" },
 };
-const STEPS = ["PLANIFICADA", "AMASADO", "FERMENTANDO", "HORNEADO"];
+const FALLBACK_STAGES = {
+  MASAS: ["PLANIFICADA", "AMASADO", "FERMENTANDO", "HORNEADO"],
+  PANE_ESPECIAL: ["PLANIFICADA", "AMASADO", "FERMENTANDO", "HORNEADO"],
+  YOGUR: ["PREVISION", "PREPARACION", "FERMENTACION", "ENVASADO"],
+  HELADO: ["PREVISION", "MEZCLA", "MADURACION", "SERVICIO"],
+  BIZCOCHO: ["PREVISION", "PREPARACION", "HORNEADO", "CONSERVACION"],
+};
 
-function seg(i, key, index, progress) {
+function stageLabel(tipo, key) { return (STAGE_LABELS[tipo] && STAGE_LABELS[tipo][key]) || key; }
+
+function seg(i, tipo, key, index, progress) {
   const state = i < index ? "is-done" : i === index ? "is-current" : "is-pending";
   const fill = i < index ? 100 : i === index ? Math.round(progress * 100) : 0;
   return `<div class="amasadora-step ${state}">
     <span class="amasadora-seg"><span class="amasadora-seg-fill" style="width:${fill}%"></span></span>
-    <span class="amasadora-step-label">${i < index ? `<span class="amasadora-step-ico">${icon("check")}</span>` : ""}${STEP_LABELS[key]}</span>
+    <span class="amasadora-step-label">${i < index ? `<span class="amasadora-step-ico">${icon("check")}</span>` : ""}${stageLabel(tipo, key)}</span>
   </div>`;
 }
 
@@ -34,7 +43,6 @@ function ovenSvg() {
       <circle cx="52" cy="140" r="5" fill="#fff" opacity="0.5"/>
       <circle cx="148" cy="140" r="5" fill="#fff" opacity="0.5"/>
     </g>
-    <circle cx="100" cy="100" r="10" fill="#a54a26" opacity="0.12"/>
   </svg>`;
 }
 
@@ -52,50 +60,52 @@ function bakeBlock(a) {
 }
 
 export function amasadoraCardHtml(a, now) {
-  const s = getAmasadoraStage(a, now);
-  const nombre = escapeHtml(a.producto?.nombre || "Producto");
+  const tipo = a.tipo || "MASAS";
+  const def = produccionTipo(tipo);
+  const s = getProduccionStage(a, now);
+  const nombre = escapeHtml(a.producto?.nombre || a.nombre || "Producto");
   const fecha = a.fechaInicio ? formatDateES(a.fechaInicio, { day: "numeric", month: "short", year: "numeric" }) : "";
-  const meta = s.key === "PLANIFICADA" ? `Planificada para ${fecha}` : `Iniciada ${fecha}`;
-  const completed = s.key === "COMPLETADA";
-  const steps = STEPS.map((k, i) => seg(i, k, s.index, s.progress)).join("");
-  return `
-  <div class="amasadora-card" data-key="${s.key}" data-id="${escapeHtml(a.id)}">
-    <div class="amasadora-head">
-      <div>
-        <div class="amasadora-name">${nombre}</div>
-        <div class="amasadora-meta">${escapeHtml(meta)}</div>
-      </div>
-      <span class="amasadora-chip ${s.key.toLowerCase()}">${escapeHtml(s.label)}</span>
-    </div>
+  const meta = def.visible === "DAY_BEFORE" ? `Programada para ${fecha}` : `Iniciada ${fecha}`;
+  const stages = (s.stages && s.stages.length) ? s.stages : (FALLBACK_STAGES[tipo] || FALLBACK_STAGES.MASAS);
+  const cancelled = s.key === "CANCELADA";
+
+  if (cancelled) {
+    return `<div class="amasadora-card amasadora-cancelled" data-key="CANCELADA" data-id="${escapeHtml(a.id)}">
+      <div class="amasadora-head"><div><div class="amasadora-name">${nombre}</div><div class="amasadora-meta">Cancelada</div></div><span class="amasadora-chip cancelada">Cancelada</span></div>
+      <div class="amasadora-actions"><button class="ghost small delete-btn" data-id="${escapeHtml(a.id)}">${icon("x")} Eliminar</button></div>
+    </div>`;
+  }
+
+  const steps = stages.map((k, i) => seg(i, tipo, k, s.index, s.progress)).join("");
+  const chipCls = s.key.toLowerCase();
+  const showBake = def.tracksStock && s.key === "HORNEADO";
+  const tipoTag = `<span class="amasadora-tipo">${escapeHtml(def.label)}</span>`;
+
+  return `<div class="amasadora-card" data-key="${s.key}" data-id="${escapeHtml(a.id)}">
+    <div class="amasadora-head"><div><div class="amasadora-name">${nombre}</div><div class="amasadora-meta">${tipoTag} · ${escapeHtml(meta)}</div></div><span class="amasadora-chip ${chipCls}">${escapeHtml(s.label)}</span></div>
     <div class="amasadora-stepper" role="progressbar" aria-valuenow="${s.overall}" aria-valuemin="0" aria-valuemax="100" aria-label="Progreso de ${nombre}">
       <div class="amasadora-step-bar">${steps}</div>
       <div class="amasadora-progress-hint"><span>${escapeHtml(s.label)}</span><strong>${s.overall}%</strong></div>
     </div>
-    ${s.key === "HORNEADO" && !completed ? bakeBlock(a) : ""}
+    ${showBake ? bakeBlock(a) : ""}
+    <div class="amasadora-actions"><button class="ghost small cancel-btn" data-id="${escapeHtml(a.id)}">${icon("x")} Cancelar</button><button class="ghost small delete-btn" data-id="${escapeHtml(a.id)}">Eliminar</button></div>
   </div>`;
 }
 
-export function renderAmasadorasInto(container, amasadoras, now, onConfirm) {
-  if (!amasadoras || !amasadoras.length) {
-    container.innerHTML = `<p class="empty">No hay amasadoras en curso</p>`;
-    return;
-  }
-  // Conserva los valores escritos al refrescar la vista (no perder lo tecleado).
+export function renderAmasadorasInto(container, amasadoras, now, { onConfirm, onCancel, onDelete }) {
+  if (!amasadoras || !amasadoras.length) { container.innerHTML = `<p class="empty">No hay producciones en curso</p>`; return; }
   const saved = {};
   container.querySelectorAll("input[type=number]").forEach((i) => { saved[i.id] = i.value; });
-
   container.innerHTML = amasadoras.map((a) => amasadoraCardHtml(a, now)).join("");
-
-  Object.entries(saved).forEach(([id, v]) => {
-    const el = document.getElementById(id);
-    if (el) el.value = v;
-  });
+  Object.entries(saved).forEach(([id, v]) => { const el = document.getElementById(id); if (el) el.value = v; });
 
   container.querySelectorAll(".confirm-btn").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const id = btn.dataset.id;
-      const input = container.querySelector(`#piezas-${CSS.escape(id)}`);
-      onConfirm && onConfirm(id, input ? input.value : "", btn);
-    });
+    btn.addEventListener("click", () => { const id = btn.dataset.id; const input = container.querySelector(`#piezas-${CSS.escape(id)}`); onConfirm && onConfirm(id, input ? input.value : "", btn); });
+  });
+  container.querySelectorAll(".cancel-btn").forEach((btn) => {
+    btn.addEventListener("click", () => { onCancel && onCancel(btn.dataset.id, btn); });
+  });
+  container.querySelectorAll(".delete-btn").forEach((btn) => {
+    btn.addEventListener("click", () => { onDelete && onDelete(btn.dataset.id, btn); });
   });
 }

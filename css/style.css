@@ -786,6 +786,24 @@ th {
 .planning-table th.is-today { color: var(--action); }
 .plan-help { margin-top: var(--space-4); }
 
+
+/* ===== Previsión en tarjetas de inventario ===== */
+.product-card-forecast { display: flex; gap: 24px; padding-top: var(--space-3); margin-top: var(--space-2); border-top: 1px solid var(--separator); font-size: 0.9rem; }
+.forecast-item { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.forecast-label { color: var(--text-hint); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; }
+.forecast-item strong { color: var(--text-primary); font-weight: 700; display: inline-flex; align-items: center; gap: 6px; }
+.forecast-item .badge { font-size: 0.68rem; padding: 2px 8px; }
+
+/* ===== Producciones: tipo, acciones, cancelada ===== */
+.amasadora-tipo { display: inline-flex; align-items: center; gap: 5px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-secondary); background: var(--tint-soft); padding: 2px 8px; border-radius: var(--radius-full); }
+.amasadora-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: var(--space-3); }
+.amasadora-actions button { min-height: 34px; min-width: 0; padding: 8px 14px; font-size: 0.85rem; background: transparent; color: var(--text-secondary); border: 1px solid var(--separator-strong); border-radius: var(--radius-full); box-shadow: none; }
+.amasadora-actions button:hover { background: var(--tint-soft); color: var(--action); border-color: transparent; }
+.amasadora-actions .delete-btn.confirming { background: var(--danger); color: #fff; border-color: transparent; }
+.amasadora-cancelled { opacity: 0.72; }
+.amasadora-chip.cancelada { background: var(--danger-bg); color: var(--danger); }
+
+
 /* ===================== RESPONSIVE ===================== */
 /* ===================== RESPONSIVE ===================== */
 @media (max-width: 768px) {

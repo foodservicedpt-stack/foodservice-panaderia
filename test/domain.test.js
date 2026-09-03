@@ -88,3 +88,34 @@ test("valida la unidad del producto", () => {
   assert.doesNotThrow(() => validateProductInput({ nombre: "Pan", unidad: "kg" }));
   assert.throws(() => validateProductInput({ nombre: "Pan", unidad: "x".repeat(13) }), /unidad/);
 });
+
+import { produccionStages, getProduccionStage, isProduccionVisible, produccionTipo, forecastStock } from "../js/domain.js";
+
+test("etapas y horarios de cada tipo de producción", () => {
+  assert.equal(produccionStages("MASAS", "2026-09-20", "2026-09-15T10:00:00.000Z").length, 4);
+  assert.deepEqual(produccionStages("YOGUR", "2026-09-20", "2026-09-10T10:00:00.000Z").map((s) => s.key), ["PREVISION", "PREPARACION", "FERMENTACION", "ENVASADO"]);
+  assert.deepEqual(produccionStages("HELADO", "2026-09-20", "2026-09-10T10:00:00.000Z").map((s) => s.key), ["PREVISION", "MEZCLA", "MADURACION", "SERVICIO"]);
+  assert.deepEqual(produccionStages("BIZCOCHO", "2026-09-20", "2026-09-10T10:00:00.000Z").map((s) => s.key), ["PREVISION", "PREPARACION", "HORNEADO", "CONSERVACION"]);
+});
+
+test("yogur: prepara el día propio, visible el día anterior", () => {
+  const y = { id: "y1", tipo: "YOGUR", fechaInicio: "2026-09-20", createdAt: "2026-09-10T10:00:00.000Z" };
+  assert.equal(getProduccionStage(y, new Date(2026, 8, 20, 8, 0)).key, "PREPARACION");
+  assert.equal(getProduccionStage(y, new Date(2026, 8, 20, 20, 0)).key, "FERMENTACION");
+  const def = produccionTipo("YOGUR");
+  assert.ok(isProduccionVisible(y, def, new Date(2026, 8, 19, 12, 0)));
+  assert.ok(!isProduccionVisible(y, def, new Date(2026, 8, 13, 12, 0)));
+});
+
+test("previsión de stock según la planificación", () => {
+  const planByKey = {
+    "p1_2026-09-20": { desayuno: 30, comida: 20, extra: 0 },
+    "p1_2026-09-21": { desayuno: 40, comida: 10, extra: 10 },
+  };
+  const f = forecastStock({ stockActual: 100, consumoDiarioDefecto: 10, planByKey, productoId: "p1", todayStr: "2026-09-20" });
+  assert.equal(f.daysCovered, 2);
+  assert.equal(f.lastCovered, "2026-09-21");
+  assert.equal(f.planTomorrow, 60);
+  assert.equal(f.projectedTomorrow, 40);
+  assert.equal(f.shortTomorrow, false);
+});

@@ -25,9 +25,17 @@
         <button id="nueva-btn">Nueva amasadora</button>
       </div>
       <div id="nueva-form" class="card nested-card" hidden>
-        <label class="field-label">Producto</label>
-        <select id="producto-select" aria-label="Selecciona el producto"></select>
-        <label class="field-label" for="fecha-input">Fecha de inicio</label>
+        <label class="field-label" for="tipo-select">Tipo de producción</label>
+        <select id="tipo-select" aria-label="Tipo de producción"></select>
+        <div id="producto-field">
+          <label class="field-label" for="producto-select">Producto</label>
+          <select id="producto-select" aria-label="Selecciona el producto"></select>
+        </div>
+        <div id="nombre-field" hidden>
+          <label class="field-label" for="nombre-input">Nombre</label>
+          <input type="text" id="nombre-input" placeholder="Ej. Yogur natural" maxlength="80" />
+        </div>
+        <label class="field-label" for="fecha-input">Fecha de producción</label>
         <input type="date" id="fecha-input" />
         <div class="row">
           <button id="crear-btn">Crear</button>
@@ -44,7 +52,7 @@
     <div class="card">
       <h3>Historial</h3>
       <table>
-        <thead><tr><th>Producto</th><th>Fecha inicio</th><th>Estado</th><th>Piezas</th></tr></thead>
+        <thead><tr><th>Tipo</th><th>Nombre</th><th>Fecha</th><th>Piezas</th></tr></thead>
         <tbody id="historial-body"></tbody>
       </table>
     </div>
