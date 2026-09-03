@@ -1,10 +1,9 @@
-import { requireSession } from "./auth.js";
 import { renderNav } from "./nav.js";
 import { getProductosStock, getAmasadoras, confirmarAmasadora } from "./data.js";
 import { getGreeting, calcCoverageDays, getStockStatus, formatCoverageDays, formatDateES } from "./utils.js";
-import { toast } from "./ui.js";
+import { escapeHtml, loadWithState, toast } from "./ui.js";
+import { quantityInput } from "./components.js";
 
-requireSession();
 renderNav("dashboard.html");
 
 document.getElementById("saludo").textContent = `${getGreeting()}, equipo`;
@@ -26,18 +25,18 @@ async function load() {
   const alerts = withStatus.filter((p) => p.status === "danger");
 
   if (alerts.length) {
-    document.getElementById("alerts-card").style.display = "";
+    document.getElementById("alerts-card").hidden = false;
     document.getElementById("alerts-body").innerHTML = alerts
       .map(
         (p) => {
           const rate = p.consumoDiarioDefecto || 0;
           return `<tr>
-            <td data-label="Producto">${p.nombre}</td>
+            <td data-label="Producto">${escapeHtml(p.nombre)}</td>
             <td data-label="Stock">${p.stockActual}</td>
             <td data-label="Cobertura">
               <div>
                 <span class="badge danger">${formatCoverageDays(p.coverageDays)}</span>
-                ${rate > 0 ? `<small class="meta-text" style="display:block;margin-top:3px;">a ${rate}/día</small>` : ""}
+                ${rate > 0 ? `<small class="meta-text rate-text">a ${rate}/día</small>` : ""}
               </div>
             </td>
           </tr>`;
@@ -49,18 +48,18 @@ async function load() {
   // Amasadoras pendientes
   const pendientes = amasadoras.filter((a) => a.estado === "EN_FERMENTACION");
   if (pendientes.length) {
-    document.getElementById("amasadoras-card").style.display = "";
+    document.getElementById("amasadoras-card").hidden = false;
     const list = document.getElementById("amasadoras-list");
     list.innerHTML = pendientes
       .map(
         (a) => `
       <div class="list-row">
         <div>
-          <strong>${a.producto?.nombre || "Producto"}</strong><br/>
+          <strong>${escapeHtml(a.producto?.nombre || "Producto")}</strong><br/>
           <span class="meta-text">Iniciada: ${formatDateES(a.fechaInicio)}</span>
         </div>
         <div class="row">
-          <input type="number" min="1" placeholder="Piezas" aria-label="Piezas producidas" style="width:90px; margin:0;" id="piezas-${a.id}" />
+          ${quantityInput({ id: `piezas-${a.id}`, label: "Piezas producidas", min: 1 })}
           <button data-id="${a.id}" class="confirm-btn" aria-label="Confirmar amasadora">Confirmar</button>
         </div>
       </div>`
@@ -80,7 +79,7 @@ async function load() {
         try {
           await confirmarAmasadora({ amasadoraId: id, piezas });
           toast("Amasadora confirmada", "success");
-          load();
+          loadWithState(document.getElementById("page-status"), load);
         } catch (err) {
           toast("Error al confirmar: " + err.message, "error");
           btn.disabled = false;
@@ -91,4 +90,4 @@ async function load() {
   }
 }
 
-load();
+loadWithState(document.getElementById("page-status"), load);
