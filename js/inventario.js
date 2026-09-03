@@ -2,6 +2,7 @@ import { requireSession } from "./auth.js";
 import { renderNav } from "./nav.js";
 import { getInventario, addMovimiento } from "./data.js";
 import { calcCoverageDays, getStockStatus, formatDateES } from "./utils.js";
+import { toast } from "./ui.js";
 
 requireSession();
 renderNav("inventario.html");
@@ -21,7 +22,7 @@ async function load() {
         <td data-label="Cobertura"><span class="badge ${status}">${coverageDays} días</span></td>
         <td data-label="Ajustar">
           <div class="row">
-            <input type="number" placeholder="+/- cantidad" style="width:110px; margin:0;" id="qty-${p.id}" />
+            <input type="number" placeholder="+/- cantidad" aria-label="Cantidad a ajustar" style="width:110px; margin:0;" id="qty-${p.id}" />
             <button data-id="${p.id}" class="ajustar-btn">Aplicar</button>
           </div>
         </td>
@@ -48,16 +49,17 @@ async function load() {
       const input = document.getElementById(`qty-${id}`);
       const cantidad = parseInt(input.value);
       if (!cantidad) {
-        alert("Introduce una cantidad válida (positiva o negativa)");
+        toast("Introduce una cantidad válida (positiva o negativa)", "error");
         return;
       }
       btn.disabled = true;
       try {
         await addMovimiento({ productoId: id, cantidad, tipo: "AJUSTE" });
+        toast("Stock actualizado", "success");
         input.value = "";
         load();
       } catch (err) {
-        alert("Error: " + err.message);
+        toast("Error: " + err.message, "error");
       } finally {
         btn.disabled = false;
       }

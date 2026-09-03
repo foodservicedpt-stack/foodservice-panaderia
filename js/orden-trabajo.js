@@ -2,6 +2,7 @@ import { requireSession } from "./auth.js";
 import { renderNav } from "./nav.js";
 import { getOrdenTrabajo, toggleOrdenTrabajo, saveNota } from "./data.js";
 import { toDateString, formatDateES } from "./utils.js";
+import { toast } from "./ui.js";
 
 requireSession();
 renderNav("orden-trabajo.html");
@@ -28,7 +29,7 @@ document.getElementById("guardar-nota-btn").addEventListener("click", async () =
     btn.textContent = "Guardado ✓";
     setTimeout(() => (btn.textContent = "Guardar nota"), 1500);
   } catch (err) {
-    alert("Error: " + err.message);
+    toast("Error: " + err.message, "error");
   } finally {
     btn.disabled = false;
   }
@@ -69,7 +70,7 @@ async function load() {
       try {
         await toggleOrdenTrabajo({ productoId: cb.dataset.prod, fecha, completado: cb.checked });
       } catch (err) {
-        alert("Error: " + err.message);
+        toast("Error: " + err.message, "error");
         cb.checked = !cb.checked;
       }
     });

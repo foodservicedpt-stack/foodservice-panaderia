@@ -4,20 +4,22 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Panadería · Amasadoras</title>
+<meta name="description" content="Controla las amasadoras en fermentación y su historial." />
 <link rel="stylesheet" href="css/style.css" />
-<meta name="theme-color" content="#d4a574" />
+<meta name="theme-color" content="#a54a26" />
 </head>
 <body>
-  <main>
+  <a class="skip-link" href="#main">Saltar al contenido</a>
+  <main id="main">
     <div class="card">
       <div class="row-between">
-        <h2>🍞 Amasadoras</h2>
-        <button id="nueva-btn">+ Nueva amasadora</button>
+        <h2>Amasadoras</h2>
+        <button id="nueva-btn">Nueva amasadora</button>
       </div>
-      <div id="nueva-form" class="card" style="display:none; background:var(--bg-glass); box-shadow:none;">
-        <label>Producto</label>
-        <select id="producto-select"></select>
-        <label>Fecha de inicio</label>
+      <div id="nueva-form" class="card" style="display:none; background:var(--surface-raised); box-shadow:none;">
+        <label class="field-label">Producto</label>
+        <select id="producto-select" aria-label="Selecciona el producto"></select>
+        <label class="field-label" for="fecha-input">Fecha de inicio</label>
         <input type="date" id="fecha-input" />
         <div class="row">
           <button id="crear-btn">Crear</button>

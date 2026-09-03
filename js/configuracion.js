@@ -2,6 +2,7 @@ import { requireSession } from "./auth.js";
 import { renderNav } from "./nav.js";
 import { getProductos, saveProducto } from "./data.js";
 import { changePassword } from "./auth.js";
+import { toast } from "./ui.js";
 
 requireSession();
 renderNav("configuracion.html");
@@ -14,7 +15,7 @@ async function load() {
   list.innerHTML = productos
     .map(
       (p) => `
-    <div class="row-between" style="border-bottom:1px solid var(--cream-dark); padding:10px 0; flex-wrap:wrap;">
+    <div class="list-row">
       <div class="row" style="flex-wrap:wrap;">
         <input type="text" value="${p.nombre}" data-field="nombre" data-id="${p.id}" style="width:160px; margin:0;" />
         <select data-field="categoria" data-id="${p.id}" style="width:110px; margin:0;">
@@ -49,7 +50,7 @@ async function load() {
         btn.textContent = "Guardado ✓";
         setTimeout(() => (btn.textContent = "Guardar"), 1200);
       } catch (err) {
-        alert("Error: " + err.message);
+        toast("Error: " + err.message, "error");
         btn.textContent = "Guardar";
       } finally {
         btn.disabled = false;
@@ -58,11 +59,43 @@ async function load() {
   });
 }
 
-document.getElementById("nuevo-producto-btn").addEventListener("click", async () => {
-  const nombre = prompt("Nombre del nuevo producto:");
-  if (!nombre) return;
-  await saveProducto({ nombre, categoria: "STOCK" });
-  load();
+const nuevoForm = document.getElementById("nuevo-producto");
+const nuevoBtn = document.getElementById("nuevo-producto-btn");
+const cancelBtn = document.getElementById("cancelar-producto-btn");
+
+nuevoBtn.addEventListener("click", () => {
+  nuevoForm.style.display = "";
+  nuevoBtn.style.display = "none";
+  document.getElementById("nuevo-nombre").focus();
+});
+
+cancelBtn.addEventListener("click", () => {
+  nuevoForm.style.display = "none";
+  nuevoBtn.style.display = "";
+});
+
+document.getElementById("crear-producto-btn").addEventListener("click", async () => {
+  const nombre = document.getElementById("nuevo-nombre").value.trim();
+  if (!nombre) {
+    toast("Escribe un nombre para el producto", "error");
+    return;
+  }
+  const btn = document.getElementById("crear-producto-btn");
+  btn.disabled = true;
+  btn.textContent = "Creando...";
+  try {
+    await saveProducto({ nombre, categoria: "STOCK" });
+    document.getElementById("nuevo-nombre").value = "";
+    nuevoForm.style.display = "none";
+    nuevoBtn.style.display = "";
+    toast(`Producto "${nombre}" creado`, "success");
+    load();
+  } catch (err) {
+    toast("Error: " + err.message, "error");
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Crear";
+  }
 });
 
 document.getElementById("change-pass-btn").addEventListener("click", async () => {

@@ -11,6 +11,16 @@ App estática (HTML/CSS/JS, sin build ni servidor) para GitHub Pages, con **Fire
 - `js/utils.js` — utilidades de fechas y cálculo de cobertura de stock
 - `firestore.rules` — reglas de seguridad de Firestore (ver nota de seguridad dentro del archivo)
 
+## Diseño (pautas Apple HIG)
+
+La interfaz sigue las pautas de las Human Interface Guidelines de Apple, adaptadas a la web:
+
+- Colores semánticos con variables CSS, con soporte de modo claro/oscuro mediante prefers-color-scheme.
+- Contraste accesible: botones, textos y badges cumplen WCAG AA (4.5:1).
+- Tipografía del sistema (SF Pro / -apple-system).
+- Iconografía SVG uniforme (estilo SF Symbols) en lugar de emojis, definida en js/ui.js.
+- Superficies translúcidas (glass) sutiles con sombras suaves y radios generosos.
+- Feedback no intrusivo: notificaciones toast() en lugar de alert()/prompt().
 ## Primer uso
 La primera vez que alguien entra en `index.html` con una contraseña, esa contraseña se
 guarda como la contraseña del equipo (no hace falta configurarla a mano en Firestore).

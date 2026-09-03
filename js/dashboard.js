@@ -2,6 +2,7 @@ import { requireSession } from "./auth.js";
 import { renderNav } from "./nav.js";
 import { getProductosStock, getAmasadoras, confirmarAmasadora } from "./data.js";
 import { getGreeting, calcCoverageDays, getStockStatus, formatDateES } from "./utils.js";
+import { toast } from "./ui.js";
 
 requireSession();
 renderNav("dashboard.html");
@@ -45,14 +46,14 @@ async function load() {
     list.innerHTML = pendientes
       .map(
         (a) => `
-      <div class="row-between" style="border-bottom:1px solid var(--cream-dark); padding:10px 0;">
+      <div class="list-row">
         <div>
           <strong>${a.producto?.nombre || "Producto"}</strong><br/>
-          <span style="color:#7a6a58; font-size:0.85rem;">Iniciada: ${formatDateES(a.fechaInicio)}</span>
+          <span class="meta-text">Iniciada: ${formatDateES(a.fechaInicio)}</span>
         </div>
         <div class="row">
-          <input type="number" min="1" placeholder="Piezas" style="width:90px; margin:0;" id="piezas-${a.id}" />
-          <button data-id="${a.id}" class="confirm-btn">Confirmar</button>
+          <input type="number" min="1" placeholder="Piezas" aria-label="Piezas producidas" style="width:90px; margin:0;" id="piezas-${a.id}" />
+          <button data-id="${a.id}" class="confirm-btn" aria-label="Confirmar amasadora">Confirmar</button>
         </div>
       </div>`
       )
@@ -63,16 +64,17 @@ async function load() {
         const id = btn.dataset.id;
         const piezas = document.getElementById(`piezas-${id}`).value;
         if (!piezas || parseInt(piezas) <= 0) {
-          alert("Introduce un número válido de piezas");
+          toast("Introduce un número válido de piezas", "error");
           return;
         }
         btn.disabled = true;
         btn.textContent = "Guardando...";
         try {
           await confirmarAmasadora({ amasadoraId: id, piezas });
+          toast("Amasadora confirmada", "success");
           load();
         } catch (err) {
-          alert("Error al confirmar: " + err.message);
+          toast("Error al confirmar: " + err.message, "error");
           btn.disabled = false;
           btn.textContent = "Confirmar";
         }

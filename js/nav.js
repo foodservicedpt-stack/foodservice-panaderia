@@ -1,12 +1,13 @@
 import { logout } from "./auth.js";
+import { icon } from "./ui.js";
 
 const LINKS = [
-  { href: "dashboard.html", label: "Inicio" },
-  { href: "inventario.html", label: "Inventario" },
-  { href: "planificacion.html", label: "Planificación" },
-  { href: "amasadoras.html", label: "Amasadoras" },
-  { href: "orden-trabajo.html", label: "Orden de trabajo" },
-  { href: "configuracion.html", label: "Configuración" },
+  { href: "dashboard.html", label: "Inicio", icon: "home" },
+  { href: "inventario.html", label: "Inventario", icon: "box" },
+  { href: "planificacion.html", label: "Planificación", icon: "calendar" },
+  { href: "amasadoras.html", label: "Amasadoras", icon: "wheat" },
+  { href: "orden-trabajo.html", label: "Orden de trabajo", icon: "task" },
+  { href: "configuracion.html", label: "Configuración", icon: "gear" },
 ];
 
 export function renderNav(current) {
@@ -15,12 +16,15 @@ export function renderNav(current) {
   const current_ = current || location.pathname.split("/").pop();
 
   header.innerHTML = `
-    <h1>🥖 Panadería</h1>
-    <nav class="app-nav">
+    <a class="brand" href="dashboard.html" aria-label="Panadería — Inicio">
+      <span class="brand-mark">${icon("wheat")}</span>
+      <h1>Panadería</h1>
+    </a>
+    <nav class="app-nav" aria-label="Navegación principal">
       ${LINKS.map(
-        (l) => `<a href="${l.href}" class="${l.href === current_ ? "active" : ""}">${l.label}</a>`
+        (l) => `<a href="${l.href}" class="${l.href === current_ ? "active" : ""}">${icon(l.icon)}${l.label}</a>`
       ).join("")}
-      <button class="logout-btn" id="logout-btn">Salir</button>
+      <button class="logout-btn" id="logout-btn">${icon("logout")} Salir</button>
     </nav>
   `;
   document.body.prepend(header);

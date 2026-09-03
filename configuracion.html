@@ -4,22 +4,34 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Panadería · Configuración</title>
+<meta name="description" content="Gestiona los productos del obrador y la contraseña del equipo." />
 <link rel="stylesheet" href="css/style.css" />
-<meta name="theme-color" content="#d4a574" />
+<meta name="theme-color" content="#a54a26" />
 </head>
 <body>
-  <main>
+  <a class="skip-link" href="#main">Saltar al contenido</a>
+  <main id="main">
     <div class="card">
-      <h2>⚙️ Productos</h2>
+      <h2>Productos</h2>
       <div id="productos-list"></div>
-      <button id="nuevo-producto-btn" class="secondary" style="margin-top:10px;">+ Nuevo producto</button>
+      <button id="nuevo-producto-btn" class="secondary" style="margin-top:12px;">Nuevo producto</button>
+      <div id="nuevo-producto" class="card" style="display:none; background:var(--surface-raised); box-shadow:none; margin-top:12px;">
+        <label class="field-label" for="nuevo-nombre">Nombre del producto</label>
+        <input type="text" id="nuevo-nombre" placeholder="Ej. Pan de chapata" />
+        <div class="row">
+          <button id="crear-producto-btn">Crear</button>
+          <button id="cancelar-producto-btn" class="secondary">Cancelar</button>
+        </div>
+      </div>
     </div>
 
     <div class="card">
       <h3>Cambiar contraseña de equipo</h3>
       <div class="error-msg" id="pass-error" role="alert" aria-live="polite"></div>
       <div class="success-msg" id="pass-success" role="status" aria-live="polite"></div>
+      <label class="field-label" for="current-password">Contraseña actual</label>
       <input type="password" id="current-password" placeholder="Contraseña actual" aria-label="Contraseña actual" />
+      <label class="field-label" for="new-password">Nueva contraseña</label>
       <input type="password" id="new-password" placeholder="Nueva contraseña" aria-label="Nueva contraseña" />
       <button id="change-pass-btn">Cambiar contraseña</button>
     </div>

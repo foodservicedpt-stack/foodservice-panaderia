@@ -2,6 +2,7 @@ import { requireSession } from "./auth.js";
 import { renderNav } from "./nav.js";
 import { getAmasadoras, createAmasadora, confirmarAmasadora, getProductos } from "./data.js";
 import { formatDateES, toDateString } from "./utils.js";
+import { toast } from "./ui.js";
 
 requireSession();
 renderNav("amasadoras.html");
@@ -25,13 +26,14 @@ document.getElementById("cancelar-btn").addEventListener("click", () => {
 document.getElementById("crear-btn").addEventListener("click", async () => {
   const productoId = document.getElementById("producto-select").value;
   const fechaInicio = document.getElementById("fecha-input").value;
-  if (!productoId) return alert("Selecciona un producto");
+  if (!productoId) { toast("Selecciona un producto", "error"); return; }
   try {
     await createAmasadora({ productoId, fechaInicio });
     document.getElementById("nueva-form").style.display = "none";
+    toast("Amasadora creada", "success");
     load();
   } catch (err) {
-    alert("Error al crear: " + err.message);
+    toast("Error al crear: " + err.message, "error");
   }
 });
 
@@ -45,14 +47,14 @@ async function load() {
     pendientes
       .map(
         (a) => `
-      <div class="row-between" style="border-bottom:1px solid var(--cream-dark); padding:10px 0;">
+      <div class="list-row">
         <div>
           <strong>${a.producto?.nombre || "Producto"}</strong><br/>
-          <span style="color:#7a6a58; font-size:0.85rem;">Iniciada: ${formatDateES(a.fechaInicio)}</span>
+          <span class="meta-text">Iniciada: ${formatDateES(a.fechaInicio)}</span>
         </div>
         <div class="row">
-          <input type="number" min="1" placeholder="Piezas" style="width:90px; margin:0;" id="piezas-${a.id}" />
-          <button data-id="${a.id}" class="confirm-btn">Confirmar</button>
+          <input type="number" min="1" placeholder="Piezas" aria-label="Piezas producidas" style="width:90px; margin:0;" id="piezas-${a.id}" />
+          <button data-id="${a.id}" class="confirm-btn" aria-label="Confirmar amasadora">Confirmar</button>
         </div>
       </div>`
       )
@@ -62,13 +64,14 @@ async function load() {
     btn.addEventListener("click", async () => {
       const id = btn.dataset.id;
       const piezas = document.getElementById(`piezas-${id}`).value;
-      if (!piezas || parseInt(piezas) <= 0) return alert("Introduce un número válido de piezas");
+      if (!piezas || parseInt(piezas) <= 0) { toast("Introduce un número válido de piezas", "error"); return; }
       btn.disabled = true;
       try {
         await confirmarAmasadora({ amasadoraId: id, piezas });
+        toast("Amasadora confirmada", "success");
         load();
       } catch (err) {
-        alert("Error: " + err.message);
+        toast("Error: " + err.message, "error");
         btn.disabled = false;
       }
     });

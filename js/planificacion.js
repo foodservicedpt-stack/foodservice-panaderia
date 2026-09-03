@@ -2,6 +2,7 @@ import { requireSession } from "./auth.js";
 import { renderNav } from "./nav.js";
 import { getPlanificacion, savePlanificacion } from "./data.js";
 import { getMondayOfWeek, toDateString, dayAbbr, formatDateES } from "./utils.js";
+import { toast } from "./ui.js";
 
 requireSession();
 renderNav("planificacion.html");
@@ -70,7 +71,7 @@ async function load() {
           .join("")}
       </tbody>
     </table>
-    <p style="color:#7a6a58; font-size:0.85rem; margin-top:10px;">Introduce la cantidad total planificada para cada día. Los cambios se guardan automáticamente al salir del campo.</p>
+    <p class="meta-text" style="margin-top:12px;">Introduce la cantidad total planificada para cada día. Los cambios se guardan automáticamente al salir del campo.</p>
   `;
 
   wrap.querySelectorAll(".plan-input").forEach((input) => {
@@ -82,7 +83,7 @@ async function load() {
       try {
         await savePlanificacion({ productoId, fecha, desayuno: 0, comida: cantidad, extra: 0, esExcepcion: false });
       } catch (err) {
-        alert("Error al guardar: " + err.message);
+        toast("Error al guardar: " + err.message, "error");
       } finally {
         input.disabled = false;
       }
