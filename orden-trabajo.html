@@ -11,6 +11,7 @@
 <body>
   <a class="skip-link" href="#main">Saltar al contenido</a>
   <main id="main">
+    <div id="page-status" class="page-status" role="status" aria-live="polite"></div>
     <div class="card">
       <div class="row-between">
         <h2>Orden de trabajo</h2>
@@ -31,9 +32,5 @@
   </main>
 
   <script type="module" src="js/orden-trabajo.js"></script>
-  <script type="module">
-    import { renderNav } from "./js/nav.js";
-    renderNav("orden-trabajo.html");
-  </script>
 </body>
 </html>

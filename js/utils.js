@@ -29,8 +29,30 @@ export function getMondayOfWeek(date) {
 }
 
 export function formatDateES(date, options) {
-  const d = typeof date === "string" ? new Date(date) : date;
+  const d = typeof date === "string" ? parseDateString(date) : date;
   return d.toLocaleDateString("es-ES", { timeZone: "Europe/Madrid", ...(options || {}) });
+}
+
+export function parseDateString(value) {
+  if (value instanceof Date) return new Date(value.getTime());
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(value));
+  if (!match) throw new Error("Fecha inválida");
+  const [, year, month, day] = match;
+  const parsed = new Date(Number(year), Number(month) - 1, Number(day), 12);
+  if (
+    parsed.getFullYear() !== Number(year) ||
+    parsed.getMonth() !== Number(month) - 1 ||
+    parsed.getDate() !== Number(day)
+  ) {
+    throw new Error("Fecha inválida");
+  }
+  return parsed;
+}
+
+export function addCalendarDays(date, days) {
+  const d = typeof date === "string" ? parseDateString(date) : new Date(date.getTime());
+  d.setDate(d.getDate() + days);
+  return d;
 }
 
 export function dayAbbr(dayIndex) {
@@ -96,12 +118,4 @@ export function toDateString(date) {
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
-}
-
-export async function sha256Hex(text) {
-  const enc = new TextEncoder().encode(text);
-  const buf = await crypto.subtle.digest("SHA-256", enc);
-  return Array.from(new Uint8Array(buf))
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
 }

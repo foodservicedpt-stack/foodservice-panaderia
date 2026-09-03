@@ -1,21 +1,19 @@
-import { requireSession } from "./auth.js";
 import { renderNav } from "./nav.js";
 import { getOrdenTrabajo, toggleOrdenTrabajo, saveNota } from "./data.js";
-import { toDateString, formatDateES } from "./utils.js";
-import { toast } from "./ui.js";
+import { addCalendarDays, toDateString, formatDateES } from "./utils.js";
+import { escapeHtml, loadWithState, toast } from "./ui.js";
 
-requireSession();
 renderNav("orden-trabajo.html");
 
 let currentDate = new Date();
 
 document.getElementById("prev-day").addEventListener("click", () => {
-  currentDate = new Date(currentDate.getTime() - 86400000);
-  load();
+  currentDate = addCalendarDays(currentDate, -1);
+  loadWithState(document.getElementById("page-status"), load);
 });
 document.getElementById("next-day").addEventListener("click", () => {
-  currentDate = new Date(currentDate.getTime() + 86400000);
-  load();
+  currentDate = addCalendarDays(currentDate, 1);
+  loadWithState(document.getElementById("page-status"), load);
 });
 
 document.getElementById("guardar-nota-btn").addEventListener("click", async () => {
@@ -60,7 +58,7 @@ async function load() {
         const completado = item ? item.completado : false;
         return `<label class="checkbox-row">
           <input type="checkbox" data-prod="${p.id}" ${completado ? "checked" : ""} class="toggle-check" />
-          <span>${p.nombre}${cantidad ? ` — <strong>${cantidad}</strong> unidades` : ""}</span>
+          <span>${escapeHtml(p.nombre)}${cantidad ? ` — <strong>${cantidad}</strong> unidades` : ""}</span>
         </label>`;
       })
       .join("") || `<p class="empty">No hay tareas planificadas para este día</p>`;
@@ -80,4 +78,4 @@ async function load() {
   document.getElementById("nota-input").value = notaExistente?.nota || "";
 }
 
-load();
+loadWithState(document.getElementById("page-status"), load);

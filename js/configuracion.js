@@ -1,10 +1,7 @@
-import { requireSession } from "./auth.js";
 import { renderNav } from "./nav.js";
 import { getProductos, saveProducto } from "./data.js";
-import { changePassword } from "./auth.js";
-import { toast } from "./ui.js";
+import { escapeHtml, loadWithState, toast } from "./ui.js";
 
-requireSession();
 renderNav("configuracion.html");
 
 const CATEGORIAS = { STOCK: "Stock", SEMANAL: "Semanal", OTRO: "Otro" };
@@ -15,25 +12,25 @@ async function load() {
   list.innerHTML = productos
     .map(
       (p) => `
-    <div class="list-row" style="flex-direction:column; align-items:stretch; gap:8px;">
-      <div class="row" style="justify-content:space-between; gap:8px; flex-wrap:wrap;">
-        <input type="text" value="${p.nombre}" data-field="nombre" data-id="${p.id}" style="flex:1; min-width:160px; margin:0;" aria-label="Nombre del producto" />
-        <select data-field="categoria" data-id="${p.id}" style="width:120px; margin:0;" aria-label="Categoría">
+    <div class="list-row product-row">
+      <div class="row product-main-fields">
+        <input type="text" value="${escapeHtml(p.nombre)}" data-field="nombre" data-id="${p.id}" class="product-name-input" aria-label="Nombre del producto" />
+        <select data-field="categoria" data-id="${p.id}" class="category-select" aria-label="Categoría">
           ${Object.entries(CATEGORIAS).map(([k, v]) => `<option value="${k}" ${p.categoria === k ? "selected" : ""}>${v}</option>`).join("")}
         </select>
-        <label class="checkbox-row" style="padding:0;">
+        <label class="checkbox-row compact-checkbox">
           <input type="checkbox" data-field="activo" data-id="${p.id}" ${p.activo !== false ? "checked" : ""} />
           <span>Activo</span>
         </label>
       </div>
-      <div class="row" style="gap:14px; align-items:flex-end; flex-wrap:wrap;">
-        <div style="flex:1; min-width:150px;">
-          <label class="field-label" style="margin:0 0 4px;" for="consumo-${p.id}">Consumo diario</label>
-          <input type="number" id="consumo-${p.id}" value="${p.consumoDiarioDefecto ?? 10}" data-field="consumoDiarioDefecto" data-id="${p.id}" style="width:100%; margin:0;" aria-label="Consumo diario (unidades por día)" />
+      <div class="row product-settings">
+        <div class="setting-field">
+          <label class="field-label" for="consumo-${p.id}">Consumo diario</label>
+          <input type="number" id="consumo-${p.id}" value="${p.consumoDiarioDefecto ?? 10}" data-field="consumoDiarioDefecto" data-id="${p.id}" aria-label="Consumo diario (unidades por día)" />
         </div>
-        <div style="flex:1; min-width:150px;">
-          <label class="field-label" style="margin:0 0 4px;" for="margen-${p.id}">Margen seguridad</label>
-          <input type="number" id="margen-${p.id}" value="${p.margenSeguridadDias ?? 2}" data-field="margenSeguridadDias" data-id="${p.id}" style="width:100%; margin:0;" aria-label="Margen de seguridad (días)" />
+        <div class="setting-field">
+          <label class="field-label" for="margen-${p.id}">Margen seguridad</label>
+          <input type="number" id="margen-${p.id}" value="${p.margenSeguridadDias ?? 2}" data-field="margenSeguridadDias" data-id="${p.id}" aria-label="Margen de seguridad (días)" />
         </div>
         <button data-id="${p.id}" class="save-btn secondary">Guardar</button>
       </div>
@@ -72,14 +69,14 @@ const nuevoBtn = document.getElementById("nuevo-producto-btn");
 const cancelBtn = document.getElementById("cancelar-producto-btn");
 
 nuevoBtn.addEventListener("click", () => {
-  nuevoForm.style.display = "";
-  nuevoBtn.style.display = "none";
+  nuevoForm.hidden = false;
+  nuevoBtn.hidden = true;
   document.getElementById("nuevo-nombre").focus();
 });
 
 cancelBtn.addEventListener("click", () => {
-  nuevoForm.style.display = "none";
-  nuevoBtn.style.display = "";
+  nuevoForm.hidden = true;
+  nuevoBtn.hidden = false;
 });
 
 document.getElementById("crear-producto-btn").addEventListener("click", async () => {
@@ -94,10 +91,10 @@ document.getElementById("crear-producto-btn").addEventListener("click", async ()
   try {
     await saveProducto({ nombre, categoria: "STOCK" });
     document.getElementById("nuevo-nombre").value = "";
-    nuevoForm.style.display = "none";
-    nuevoBtn.style.display = "";
+    nuevoForm.hidden = true;
+    nuevoBtn.hidden = false;
     toast(`Producto "${nombre}" creado`, "success");
-    load();
+    loadWithState(document.getElementById("page-status"), load);
   } catch (err) {
     toast("Error: " + err.message, "error");
   } finally {
@@ -106,25 +103,4 @@ document.getElementById("crear-producto-btn").addEventListener("click", async ()
   }
 });
 
-document.getElementById("change-pass-btn").addEventListener("click", async () => {
-  const errorEl = document.getElementById("pass-error");
-  const successEl = document.getElementById("pass-success");
-  errorEl.textContent = "";
-  successEl.textContent = "";
-  const current = document.getElementById("current-password").value;
-  const next = document.getElementById("new-password").value;
-  if (!current || !next) {
-    errorEl.textContent = "Rellena ambos campos";
-    return;
-  }
-  const result = await changePassword(current, next);
-  if (result.error) {
-    errorEl.textContent = result.error;
-  } else {
-    successEl.textContent = "Contraseña actualizada correctamente";
-    document.getElementById("current-password").value = "";
-    document.getElementById("new-password").value = "";
-  }
-});
-
-load();
+loadWithState(document.getElementById("page-status"), load);

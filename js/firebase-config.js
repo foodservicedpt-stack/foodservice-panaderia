@@ -14,7 +14,7 @@ import {
   where,
   orderBy,
   limit,
-  increment,
+  runTransaction,
   Timestamp,
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
@@ -44,6 +44,6 @@ export {
   where,
   orderBy,
   limit,
-  increment,
+  runTransaction,
   Timestamp,
 };

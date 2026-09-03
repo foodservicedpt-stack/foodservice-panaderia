@@ -11,12 +11,13 @@
 <body>
   <a class="skip-link" href="#main">Saltar al contenido</a>
   <main id="main">
+    <div id="page-status" class="page-status" role="status" aria-live="polite"></div>
     <div class="card">
       <div class="row-between">
         <h2>Amasadoras</h2>
         <button id="nueva-btn">Nueva amasadora</button>
       </div>
-      <div id="nueva-form" class="card" style="display:none; background:var(--surface-raised); box-shadow:none;">
+      <div id="nueva-form" class="card nested-card" hidden>
         <label class="field-label">Producto</label>
         <select id="producto-select" aria-label="Selecciona el producto"></select>
         <label class="field-label" for="fecha-input">Fecha de inicio</label>
@@ -43,9 +44,5 @@
   </main>
 
   <script type="module" src="js/amasadoras.js"></script>
-  <script type="module">
-    import { renderNav } from "./js/nav.js";
-    renderNav("amasadoras.html");
-  </script>
 </body>
 </html>

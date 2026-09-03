@@ -1,26 +1,25 @@
-import { requireSession } from "./auth.js";
 import { renderNav } from "./nav.js";
 import { getAmasadoras, createAmasadora, confirmarAmasadora, getProductos } from "./data.js";
 import { formatDateES, toDateString } from "./utils.js";
-import { toast } from "./ui.js";
+import { escapeHtml, loadWithState, toast } from "./ui.js";
+import { productOption, quantityInput } from "./components.js";
 
-requireSession();
 renderNav("amasadoras.html");
 
 const ESTADOS = { EN_FERMENTACION: "En fermentación", PENDIENTE_CONFIRMAR: "Pendiente confirmar", COMPLETADA: "Completada" };
 
 document.getElementById("nueva-btn").addEventListener("click", async () => {
-  document.getElementById("nueva-form").style.display = "";
+  document.getElementById("nueva-form").hidden = false;
   document.getElementById("fecha-input").value = toDateString(new Date());
   const select = document.getElementById("producto-select");
   if (!select.options.length) {
     const productos = (await getProductos()).filter((p) => p.activo !== false);
-    select.innerHTML = productos.map((p) => `<option value="${p.id}">${p.nombre}</option>`).join("");
+    select.innerHTML = productos.map(productOption).join("");
   }
 });
 
 document.getElementById("cancelar-btn").addEventListener("click", () => {
-  document.getElementById("nueva-form").style.display = "none";
+  document.getElementById("nueva-form").hidden = true;
 });
 
 document.getElementById("crear-btn").addEventListener("click", async () => {
@@ -29,9 +28,9 @@ document.getElementById("crear-btn").addEventListener("click", async () => {
   if (!productoId) { toast("Selecciona un producto", "error"); return; }
   try {
     await createAmasadora({ productoId, fechaInicio });
-    document.getElementById("nueva-form").style.display = "none";
+    document.getElementById("nueva-form").hidden = true;
     toast("Amasadora creada", "success");
-    load();
+    loadWithState(document.getElementById("page-status"), load);
   } catch (err) {
     toast("Error al crear: " + err.message, "error");
   }
@@ -49,11 +48,11 @@ async function load() {
         (a) => `
       <div class="list-row">
         <div>
-          <strong>${a.producto?.nombre || "Producto"}</strong><br/>
+          <strong>${escapeHtml(a.producto?.nombre || "Producto")}</strong><br/>
           <span class="meta-text">Iniciada: ${formatDateES(a.fechaInicio)}</span>
         </div>
         <div class="row">
-          <input type="number" min="1" placeholder="Piezas" aria-label="Piezas producidas" style="width:90px; margin:0;" id="piezas-${a.id}" />
+          ${quantityInput({ id: `piezas-${a.id}`, label: "Piezas producidas", min: 1 })}
           <button data-id="${a.id}" class="confirm-btn" aria-label="Confirmar amasadora">Confirmar</button>
         </div>
       </div>`
@@ -66,13 +65,15 @@ async function load() {
       const piezas = document.getElementById(`piezas-${id}`).value;
       if (!piezas || parseInt(piezas) <= 0) { toast("Introduce un número válido de piezas", "error"); return; }
       btn.disabled = true;
+      btn.textContent = "Guardando...";
       try {
         await confirmarAmasadora({ amasadoraId: id, piezas });
         toast("Amasadora confirmada", "success");
-        load();
+        loadWithState(document.getElementById("page-status"), load);
       } catch (err) {
         toast("Error: " + err.message, "error");
         btn.disabled = false;
+        btn.textContent = "Confirmar";
       }
     });
   });
@@ -81,7 +82,7 @@ async function load() {
     historial
       .map(
         (a) => `<tr>
-          <td data-label="Producto">${a.producto?.nombre || "—"}</td>
+          <td data-label="Producto">${escapeHtml(a.producto?.nombre || "—")}</td>
           <td data-label="Fecha inicio">${formatDateES(a.fechaInicio)}</td>
           <td data-label="Estado">${ESTADOS[a.estado] || a.estado}</td>
           <td data-label="Piezas">${a.piezasProducidas ?? "—"}</td>
@@ -90,4 +91,4 @@ async function load() {
       .join("") || `<tr><td colspan="4" class="empty">Sin historial todavía</td></tr>`;
 }
 
-load();
+loadWithState(document.getElementById("page-status"), load);

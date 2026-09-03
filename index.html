@@ -3,57 +3,16 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Panadería · Acceso</title>
-<meta name="description" content="Acceso a la gestión de inventario, planificación y amasadoras del obrador." />
+<title>Panadería</title>
+<meta name="description" content="Gestión de inventario, planificación y amasadoras del obrador." />
 <meta name="theme-color" content="#a54a26" />
 <link rel="stylesheet" href="css/style.css" />
+<meta http-equiv="refresh" content="0; url=dashboard.html" />
 </head>
-<body class="login-page">
-  <div class="login-card">
-    <div class="brand-logo" aria-hidden="true">
-      <svg viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22V9"/><path d="M12 9c-3 0-5-2-5-5 3 0 5 2 5 5zM12 9c3 0 5-2 5-5-3 0-5 2-5 5z"/><path d="M12 14c-3 0-5-2-5-5 3 0 5 2 5 5zM12 14c3 0 5-2 5-5-3 0-5 2-5 5z"/></svg>
-    </div>
-    <h1>Panadería</h1>
-    <p>Introduce la contraseña del equipo para continuar</p>
-    <div class="error-msg" id="error" role="alert" aria-live="polite"></div>
-    <form id="login-form">
-      <label class="field-label" for="password">Contraseña</label>
-      <input type="password" id="password" placeholder="Contraseña" aria-label="Contraseña" autofocus autocomplete="current-password" />
-      <button type="submit" id="submit-btn">Entrar</button>
-    </form>
-  </div>
-
-  <script type="module">
-    import { login, isLoggedIn } from "./js/auth.js";
-
-    if (isLoggedIn()) window.location.href = "dashboard.html";
-
-    const form = document.getElementById("login-form");
-    const errorEl = document.getElementById("error");
-    const btn = document.getElementById("submit-btn");
-
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      errorEl.textContent = "";
-      btn.disabled = true;
-      btn.textContent = "Entrando...";
-      const password = document.getElementById("password").value;
-      try {
-        const result = await login(password);
-        if (result.error) {
-          errorEl.textContent = result.error;
-          btn.disabled = false;
-          btn.textContent = "Entrar";
-        } else {
-          window.location.href = "dashboard.html";
-        }
-      } catch (err) {
-        console.error(err);
-        errorEl.textContent = "Error de conexión. Inténtalo de nuevo.";
-        btn.disabled = false;
-        btn.textContent = "Entrar";
-      }
-    });
+<body>
+  <p>Redirigiendo a la aplicación… <a href="dashboard.html">Continuar</a></p>
+  <script>
+    window.location.replace("dashboard.html");
   </script>
 </body>
 </html>

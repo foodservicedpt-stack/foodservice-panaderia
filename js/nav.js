@@ -1,4 +1,3 @@
-import { logout } from "./auth.js";
 import { icon } from "./ui.js";
 
 const LINKS = [
@@ -24,9 +23,7 @@ export function renderNav(current) {
       ${LINKS.map(
         (l) => `<a href="${l.href}" class="${l.href === current_ ? "active" : ""}">${icon(l.icon)}${l.label}</a>`
       ).join("")}
-      <button class="logout-btn" id="logout-btn">${icon("logout")} Salir</button>
     </nav>
   `;
   document.body.prepend(header);
-  document.getElementById("logout-btn").addEventListener("click", logout);
 }

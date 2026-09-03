@@ -9,7 +9,6 @@ const ICONS = {
   wheat: '<path d="M12 22V9"/><path d="M12 9c-3 0-5-2-5-5 3 0 5 2 5 5zM12 9c3 0 5-2 5-5-3 0-5 2-5 5z"/><path d="M12 14c-3 0-5-2-5-5 3 0 5 2 5 5zM12 14c3 0 5-2 5-5-3 0-5 2-5 5z"/>',
   task: '<path d="m9 11 3 3 8-8"/><path d="M21 12v6a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V6a3 3 0 0 1 3-3h9"/>',
   gear: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3h0a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5h0a1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9v0a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
-  logout: '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/>',
   warning: '<path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4M12 17h.01"/>',
   info: '<circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>',
   check: '<path d="M20 6 9 17l-5-5"/>',
@@ -23,7 +22,7 @@ export function icon(name, extra = '') {
   return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" ${extra}>${body}</svg>`;
 }
 
-function escapeHtml(s) {
+export function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, (ch) => ({
     '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
   }[ch]));
@@ -39,6 +38,7 @@ export function toast(message, type = 'info', { duration = 3400, title } = {}) {
     region.setAttribute('role', 'status');
     document.body.appendChild(region);
   }
+
   const t = document.createElement('div');
   t.className = 'toast ' + (['success', 'error', 'info', 'warning'].includes(type) ? type : 'info');
   const iconName = type === 'success' ? 'check' : type === 'error' ? 'x' : 'info';
@@ -58,6 +58,29 @@ export function toast(message, type = 'info', { duration = 3400, title } = {}) {
   t.querySelector('.toast-close').addEventListener('click', close);
   if (duration && duration > 0) setTimeout(close, duration);
   return t;
+}
+
+export function setLoading(element, message = "Cargando...") {
+  element.className = "loading";
+  element.textContent = message;
+}
+
+export function setError(element, message = "No se han podido cargar los datos.") {
+  element.className = "error-state";
+  element.innerHTML = `${escapeHtml(message)} <button class="secondary retry-btn">Reintentar</button>`;
+}
+
+export async function loadWithState(element, load) {
+  setLoading(element);
+  try {
+    await load();
+    element.replaceChildren();
+    element.className = "page-status";
+  } catch (error) {
+    console.error(error);
+    setError(element, "No se han podido cargar los datos.");
+    element.querySelector(".retry-btn").addEventListener("click", () => loadWithState(element, load));
+  }
 }
 
 export { ICONS };

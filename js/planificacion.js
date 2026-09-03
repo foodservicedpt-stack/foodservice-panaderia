@@ -1,25 +1,23 @@
-import { requireSession } from "./auth.js";
 import { renderNav } from "./nav.js";
 import { getPlanificacion, savePlanificacion } from "./data.js";
-import { getMondayOfWeek, toDateString, dayAbbr, formatDateES } from "./utils.js";
-import { toast } from "./ui.js";
+import { addCalendarDays, getMondayOfWeek, toDateString, dayAbbr, formatDateES } from "./utils.js";
+import { escapeHtml, loadWithState, toast } from "./ui.js";
 
-requireSession();
 renderNav("planificacion.html");
 
 let monday = getMondayOfWeek(new Date());
 
 document.getElementById("prev-week").addEventListener("click", () => {
-  monday = new Date(monday.getTime() - 7 * 86400000);
-  load();
+  monday = addCalendarDays(monday, -7);
+  loadWithState(document.getElementById("page-status"), load);
 });
 document.getElementById("next-week").addEventListener("click", () => {
-  monday = new Date(monday.getTime() + 7 * 86400000);
-  load();
+  monday = addCalendarDays(monday, 7);
+  loadWithState(document.getElementById("page-status"), load);
 });
 
 function weekDays() {
-  return Array.from({ length: 7 }, (_, i) => new Date(monday.getTime() + i * 86400000));
+  return Array.from({ length: 7 }, (_, i) => addCalendarDays(monday, i));
 }
 
 async function load() {
@@ -42,7 +40,7 @@ async function load() {
   }
 
   wrap.innerHTML = `
-    <table>
+    <div class="table-scroll planning-table-scroll"><table class="planning-table">
       <thead>
         <tr>
           <th>Producto</th>
@@ -54,7 +52,7 @@ async function load() {
           .map(
             (p) => `
           <tr>
-            <td data-label="Producto"><strong>${p.nombre}</strong></td>
+            <td data-label="Producto"><strong>${escapeHtml(p.nombre)}</strong></td>
             ${days
               .map((d) => {
                 const fecha = toDateString(d);
@@ -62,7 +60,7 @@ async function load() {
                 const existing = byKey[key];
                 const total = existing ? (existing.desayuno || 0) + (existing.comida || 0) + (existing.extra || 0) : "";
                 return `<td data-label="${formatDateES(d, { weekday: "short" })}">
-                  <input type="number" min="0" value="${total}" data-prod="${p.id}" data-fecha="${fecha}" class="plan-input" style="width:70px; margin:0;" />
+                  <input type="number" min="0" value="${total}" data-prod="${p.id}" data-fecha="${fecha}" class="plan-input" aria-label="${escapeHtml(p.nombre)}, ${formatDateES(d, { weekday: "long" })}" />
                 </td>`;
               })
               .join("")}
@@ -70,8 +68,8 @@ async function load() {
           )
           .join("")}
       </tbody>
-    </table>
-    <p class="meta-text" style="margin-top:12px;">Introduce la cantidad total planificada para cada día. Los cambios se guardan automáticamente al salir del campo.</p>
+    </table></div>
+    <p class="meta-text planning-help">Introduce la cantidad total planificada para cada día. Los cambios se guardan automáticamente al salir del campo.</p>
   `;
 
   wrap.querySelectorAll(".plan-input").forEach((input) => {
@@ -79,16 +77,21 @@ async function load() {
       const productoId = input.dataset.prod;
       const fecha = input.dataset.fecha;
       const cantidad = parseInt(input.value) || 0;
+      const cell = input.closest("td");
+      cell.classList.add("is-saving");
       input.disabled = true;
       try {
         await savePlanificacion({ productoId, fecha, desayuno: 0, comida: cantidad, extra: 0, esExcepcion: false });
+        cell.classList.add("is-saved");
+        setTimeout(() => cell.classList.remove("is-saved"), 1200);
       } catch (err) {
         toast("Error al guardar: " + err.message, "error");
       } finally {
         input.disabled = false;
+        cell.classList.remove("is-saving");
       }
     });
   });
 }
 
-load();
+loadWithState(document.getElementById("page-status"), load);

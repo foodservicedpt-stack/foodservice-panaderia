@@ -11,27 +11,32 @@
 <body>
   <a class="skip-link" href="#main">Saltar al contenido</a>
   <main id="main">
+    <div id="page-status" class="page-status" role="status" aria-live="polite"></div>
     <div class="card">
-      <h2>Inventario</h2>
-      <table>
+      <div class="row-between section-heading">
+        <div>
+          <h2>Inventario</h2>
+          <p class="meta-text">Ajusta el stock indicando siempre el motivo.</p>
+        </div>
+        <label class="field-inline" for="ajuste-notas">Motivo del ajuste
+          <input type="text" id="ajuste-notas" maxlength="200" placeholder="Ej. Merma, recepción..." />
+        </label>
+      </div>
+      <div class="table-scroll"><table>
         <thead><tr><th>Producto</th><th>Stock actual</th><th>Cobertura</th><th>Ajustar</th></tr></thead>
         <tbody id="productos-body"></tbody>
-      </table>
+      </table></div>
     </div>
 
     <div class="card">
       <h3>Últimos movimientos</h3>
-      <table>
+      <div class="table-scroll"><table>
         <thead><tr><th>Fecha</th><th>Producto</th><th>Cantidad</th><th>Tipo</th><th>Notas</th></tr></thead>
         <tbody id="movimientos-body"></tbody>
-      </table>
+      </table></div>
     </div>
   </main>
 
   <script type="module" src="js/inventario.js"></script>
-  <script type="module">
-    import { renderNav } from "./js/nav.js";
-    renderNav("inventario.html");
-  </script>
 </body>
 </html>

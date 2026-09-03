@@ -11,12 +11,13 @@
 <body>
   <a class="skip-link" href="#main">Saltar al contenido</a>
   <main id="main">
+  <div id="page-status" class="page-status" role="status" aria-live="polite"></div>
     <div class="card">
-      <p class="eyebrow" id="fecha" style="margin-bottom:6px;"></p>
+      <p class="eyebrow dashboard-date" id="fecha"></p>
       <h2 id="saludo">Hola, equipo</h2>
     </div>
 
-    <div class="card" id="alerts-card" style="display:none;">
+    <div class="card conditional-card" id="alerts-card" hidden>
       <h3>Productos con stock bajo</h3>
       <table>
         <thead><tr><th>Producto</th><th>Stock</th><th>Cobertura (días)</th></tr></thead>
@@ -24,12 +25,12 @@
       </table>
     </div>
 
-    <div class="card" id="amasadoras-card" style="display:none;">
+    <div class="card conditional-card" id="amasadoras-card" hidden>
       <h3>Amasadoras en fermentación</h3>
       <div id="amasadoras-list"></div>
     </div>
 
-    <h2 class="eyebrow" style="margin:6px 0 10px;">Accesos rápidos</h2>
+    <h2 class="eyebrow quick-access-heading">Accesos rápidos</h2>
     <div class="grid grid-3">
       <a href="inventario.html" class="tile">
         <span class="tile-icon">
@@ -71,9 +72,5 @@
   </main>
 
   <script type="module" src="js/dashboard.js"></script>
-  <script type="module">
-    import { renderNav } from "./js/nav.js";
-    renderNav("dashboard.html");
-  </script>
 </body>
 </html>

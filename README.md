@@ -3,12 +3,13 @@
 App estática (HTML/CSS/JS, sin build ni servidor) para GitHub Pages, con **Firebase Firestore** como base de datos.
 
 ## Estructura
-- `index.html` — login (contraseña de equipo)
+- `index.html` — entrada/redirección a la aplicación
 - `dashboard.html`, `inventario.html`, `planificacion.html`, `amasadoras.html`, `orden-trabajo.html`, `configuracion.html` — páginas de la app
 - `js/firebase-config.js` — configuración de Firebase (datos públicos del proyecto)
-- `js/auth.js` — sesión y contraseña de equipo (hash SHA-256 guardado en Firestore)
 - `js/data.js` — acceso a Firestore (equivalente a las antiguas rutas API)
 - `js/utils.js` — utilidades de fechas y cálculo de cobertura de stock
+- `js/components.js` — componentes HTML reutilizables para controles comunes
+- `js/domain.js` — validación y tipos JSDoc del dominio
 - `firestore.rules` — reglas de seguridad de Firestore (ver nota de seguridad dentro del archivo)
 
 ## Diseño (pautas Apple HIG)
@@ -33,9 +34,21 @@ La cobertura indica cuántos días durará el stock actual de un producto:
 - Si el producto no tiene consumo diario definido (0), la app muestra "Sin datos" en lugar de dar una alarma falsa.
 - En Inventario y en el Inicio se muestra el ritmo usado (ej. "a 50/día") junto a los días, para que siempre sepas con qué dato se calcula.
 
-## Primer uso
-La primera vez que alguien entra en `index.html` con una contraseña, esa contraseña se
-guarda como la contraseña del equipo (no hace falta configurarla a mano en Firestore).
+## Acceso
+
+La aplicación no requiere contraseña ni sesión: cualquier persona con acceso a la URL
+puede utilizarla directamente.
+
+Las operaciones que modifican stock se ejecutan en transacciones de Firestore para
+evitar actualizaciones parciales y no permiten que el stock quede por debajo de cero.
+
+## Verificación
+
+Las reglas de negocio puras se validan con Node mediante `npm test`.
+
+La auditoría visual mantiene una única escala de espaciado y colores semánticos,
+incluye foco visible, reducción de movimiento, fallback sin `backdrop-filter` y
+una tabla de planificación navegable horizontalmente en móvil.
 
 ## Publicar en GitHub Pages
 Settings → Pages → Source: rama `main`, carpeta `/ (root)`.
