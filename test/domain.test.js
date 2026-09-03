@@ -81,3 +81,10 @@ test("avance crece de forma continua dentro de una etapa", () => {
   // Hacia el final del amasado el avance debe ser mayor
   assert.ok(late.progress > early.progress);
 });
+
+
+test("valida la unidad del producto", () => {
+  assert.doesNotThrow(() => validateProductInput({ nombre: "Pan", unidad: "uds." }));
+  assert.doesNotThrow(() => validateProductInput({ nombre: "Pan", unidad: "kg" }));
+  assert.throws(() => validateProductInput({ nombre: "Pan", unidad: "x".repeat(13) }), /unidad/);
+});

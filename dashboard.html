@@ -19,10 +19,10 @@
   <a class="skip-link" href="#main">Saltar al contenido</a>
   <main id="main">
   <div id="page-status" class="page-status" role="status" aria-live="polite"></div>
-    <div class="card">
+    <section class="dashboard-hero">
       <p class="eyebrow dashboard-date" id="fecha"></p>
-      <h2 id="saludo">Hola, equipo</h2>
-    </div>
+      <h1 id="saludo" class="dashboard-greeting">Hola, equipo</h1>
+    </section>
 
     <div class="card conditional-card" id="alerts-card" hidden>
       <h3>Productos con stock bajo</h3>
@@ -37,45 +37,7 @@
       <div id="amasadoras-list"></div>
     </div>
 
-    <h2 class="eyebrow quick-access-heading">Accesos rápidos</h2>
-    <div class="grid grid-3">
-      <a href="inventario.html" class="tile">
-        <span class="tile-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8 12 3 3 8v8l9 5 9-5z"/><path d="M3 8l9 5 9-5"/><path d="M12 13v8"/></svg>
-        </span>
-        <div>
-          <div class="tile-title">Inventario</div>
-          <div class="tile-sub">Consulta y ajusta el stock</div>
-        </div>
-        <span class="arrow">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-        </span>
-      </a>
-      <a href="planificacion.html" class="tile">
-        <span class="tile-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="16.5" rx="3"/><path d="M8 2.5v4M16 2.5v4M3 9.5h18"/></svg>
-        </span>
-        <div>
-          <div class="tile-title">Planificación</div>
-          <div class="tile-sub">Semanas y cantidades</div>
-        </div>
-        <span class="arrow">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-        </span>
-      </a>
-      <a href="orden-trabajo.html" class="tile">
-        <span class="tile-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 11 3 3 8-8"/><path d="M21 12v6a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V6a3 3 0 0 1 3-3h9"/></svg>
-        </span>
-        <div>
-          <div class="tile-title">Orden de trabajo</div>
-          <div class="tile-sub">Tareas del día</div>
-        </div>
-        <span class="arrow">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-        </span>
-      </a>
-    </div>
+    <div class="dashboard-empty" id="dashboard-focus" hidden></div>
   </main>
 
   <script>

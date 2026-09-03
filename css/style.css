@@ -388,6 +388,7 @@ main { padding: var(--space-8) var(--space-6); max-width: 1160px; margin: 0 auto
 .page-head { margin-bottom: var(--space-6); }
 .page-head h2 { margin-bottom: 4px; }
 .page-head p { margin: 0; }
+.page-section { margin-bottom: var(--space-6); }
 
 /* ===================== CARDS & TILES ===================== */
 .card {
@@ -551,7 +552,7 @@ th {
 .error-state .retry-btn { margin-left: 10px; }
 .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 .table-scroll table { min-width: 620px; }
-.planning-table-scroll table { min-width: 760px; }
+.planning-table-scroll table { min-width: 620px; }
 .planning-help { margin-top: 12px; }
 .quantity-input { width: 110px; margin: 0; }
 .section-heading { align-items: flex-end; margin-bottom: var(--space-4); }
@@ -570,6 +571,8 @@ th {
 .setting-field .field-label { margin: 0 0 4px; }
 .setting-field input { width: 100%; margin: 0; }
 .planning-table td { position: relative; }
+.planning-table .plan-input { width: 100%; min-width: 58px; padding: 10px 8px; font-size: 0.95rem; }
+.planning-product strong { display: block; max-width: 150px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .planning-table td.is-saving::after { content: "Guardando"; display: block; color: var(--text-secondary); font-size: .7rem; }
 .planning-table td.is-saved::after { content: "Guardado"; display: block; color: var(--success); font-size: .7rem; }
 .conditional-card[hidden], .nested-card[hidden] { display: none; }
@@ -630,7 +633,7 @@ th {
 /* ===================== AMASADORA: TARJETA + STEPPER ===================== */
 .amasadora-card {
   padding: var(--space-5);
-  border: 1px solid var(--separator);
+  border: none;
   border-radius: var(--radius-lg);
   background: var(--surface-solid);
   margin-bottom: var(--space-4);
@@ -696,11 +699,100 @@ th {
 .amasadora-bake-form .row { gap: 10px; }
 .amasadora-bake-form input[type="number"] { margin-bottom: 0; }
 
+
+/* ===================== DASHBOARD HERO / ESTADO ===================== */
+.dashboard-hero { margin-bottom: var(--space-8); }
+.dashboard-greeting { font-size: clamp(1.9rem, 6vw, 2.8rem); font-weight: 800; letter-spacing: -0.03em; line-height: 1.05; margin: 6px 0 0; }
+.dashboard-empty { display: block; }
+.empty-state-ok {
+  display: flex; align-items: flex-start; gap: 14px;
+  padding: var(--space-6); background: var(--surface-solid);
+  border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);
+  color: var(--text-primary);
+}
+.empty-state-ok .empty-state-icon {
+  width: 44px; height: 44px; flex-shrink: 0; border-radius: 12px;
+  display: grid; place-items: center; color: var(--success); background: var(--success-bg);
+}
+.empty-state-ok svg { width: 22px; height: 22px; }
+.empty-state-ok strong { display: block; font-size: 1.02rem; }
+.empty-state-ok p { margin: 2px 0 0; color: var(--text-secondary); }
+
+/* ===================== INVENTARIO: TARJETA DE PRODUCTO ===================== */
+.product-grid { display: grid; grid-template-columns: 1fr; gap: var(--space-4); }
+@media (min-width: 768px) { .product-grid { grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); } }
+.product-card {
+  background: var(--surface-solid); border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm); padding: var(--space-5);
+  display: flex; flex-direction: column; gap: var(--space-4);
+}
+.product-card-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.product-card-name { font-size: 1.05rem; font-weight: 700; margin: 0; }
+.product-card-body { display: flex; flex-direction: column; gap: 6px; }
+.product-card-stock { display: flex; align-items: baseline; gap: 8px; }
+.product-stock-value { font-size: 2.1rem; font-weight: 800; letter-spacing: -0.03em; line-height: 1; color: var(--text-primary); }
+.product-stock-unit { font-size: 0.92rem; color: var(--text-secondary); font-weight: 600; }
+.product-card-meta { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 0.85rem; color: var(--text-hint); }
+.coverage-meta strong { color: var(--text-primary); }
+.rate-meta { color: var(--text-secondary); font-weight: 600; }
+.product-card-action { display: flex; gap: 10px; align-items: center; padding-top: var(--space-4); border-top: 1px solid var(--separator); }
+.product-card-action .product-qty-input { flex: 1; width: 100%; margin: 0; }
+.product-card-action .ajustar-btn { flex-shrink: 0; }
+
+/* ===================== PLANIFICACIÓN: NAVEGACIÓN ===================== */
+.plan-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); flex-wrap: wrap; margin: var(--space-4) 0 var(--space-5); }
+.plan-nav { display: flex; align-items: center; gap: 10px; }
+.plan-nav-current { text-align: center; min-width: 150px; }
+.plan-nav-current strong { display: block; font-size: 1.05rem; letter-spacing: -0.02em; }
+.plan-nav-sub { color: var(--text-hint); font-size: 0.8rem; }
+.icon-btn {
+  width: 40px; height: 40px; min-width: 40px; min-height: 40px; padding: 0;
+  background: var(--surface-raised); color: var(--text-secondary);
+  border: 1px solid var(--separator-strong); box-shadow: none;
+  font-size: 1.5rem; line-height: 1; border-radius: var(--radius-full);
+}
+.icon-btn:hover { background: var(--tint-soft); border-color: transparent; color: var(--action); }
+.today-btn { padding: 9px 16px; min-height: 40px; font-size: 0.85rem; }
+
+/* ===== Planificación: vista móvil (por día) ===== */
+.plan-desktop { display: none; }
+.plan-mobile { display: block; }
+.plan-day-strip { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: var(--space-4); }
+.plan-day-chip {
+  flex: 1 1 40px; min-width: 40px; max-width: 64px;
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  padding: 8px 2px; border-radius: var(--radius-md);
+  background: var(--surface-raised); color: var(--text-secondary);
+  border: 1px solid var(--separator); box-shadow: none; min-height: 0;
+}
+.plan-day-chip span { font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-tertiary); }
+.plan-day-chip strong { font-size: 0.98rem; color: var(--text-primary); }
+.plan-day-chip:hover { background: var(--surface-raised); border-color: var(--action); }
+.plan-day-chip.active { background: var(--action); border-color: transparent; color: #fff; }
+.plan-day-chip.active span, .plan-day-chip.active strong { color: #fff; }
+.plan-day-list { display: flex; flex-direction: column; gap: 10px; }
+.plan-day-item { display: flex; align-items: center; gap: 12px; background: var(--surface-solid); border-radius: var(--radius-md); padding: 12px 14px; box-shadow: var(--shadow-sm); }
+.plan-day-item-name { flex: 1; min-width: 0; font-weight: 600; }
+.plan-day-item-unit { color: var(--text-hint); font-size: 0.8rem; }
+.plan-day-item .plan-input { width: 92px; margin: 0; padding: 12px 10px; }
+.plan-day-item.is-saving::after { content: "Guardando"; color: var(--text-secondary); font-size: 0.72rem; }
+.plan-day-item.is-saved::after { content: "Guardado ✓"; color: var(--success); font-size: 0.72rem; }
+@media (min-width: 768px) { .plan-mobile { display: none; } .plan-desktop { display: block; } }
+
+/* ===== Planificación: rejilla ===== */
+.planning-product { white-space: nowrap; }
+.planning-product .planning-unit { display: block; color: var(--text-hint); font-size: 0.8rem; font-weight: 500; }
+.planning-table th.is-today, .planning-table td.is-today { background: var(--tint-soft-strong); }
+.planning-table th.is-today { color: var(--action); }
+.plan-help { margin-top: var(--space-4); }
+
 /* ===================== RESPONSIVE ===================== */
 /* ===================== RESPONSIVE ===================== */
 @media (max-width: 768px) {
   .app-header { padding: 12px var(--space-4); justify-content: center; }
   .app-nav { display: none; }
+  .table-scroll { overflow-x: visible; }
+  .table-scroll table { min-width: 0; }
 
   /* Barra de navegación inferior */
   .bottom-nav {
@@ -737,6 +829,8 @@ th {
 }
 
 @media (max-width: 640px) {
+  .table-scroll { overflow-x: visible; }
+  .table-scroll table { min-width: 0; }
   table, thead, tbody, th, td, tr { display: block; }
   thead { display: none; }
   tr { border-bottom: 1px solid var(--separator); padding: 12px 0; margin-bottom: 12px; border-radius: var(--radius-sm); background: var(--tint-soft); }

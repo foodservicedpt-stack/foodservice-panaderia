@@ -31,8 +31,8 @@ export async function getProductosStock() {
 }
 
 export async function saveProducto(body) {
-  const { id, nombre, categoria, margenSeguridadDias, consumoDiarioDefecto, diaSemanal, activo } = body;
-  validateProductInput({ nombre, categoria, margenSeguridadDias, consumoDiarioDefecto });
+  const { id, nombre, categoria, margenSeguridadDias, consumoDiarioDefecto, diaSemanal, activo, unidad } = body;
+  validateProductInput({ nombre, categoria, margenSeguridadDias, consumoDiarioDefecto, unidad });
 
   if (id) {
     const ref = doc(db, "productos", String(id));
@@ -41,6 +41,7 @@ export async function saveProducto(body) {
     if (categoria !== undefined) data.categoria = categoria;
     if (margenSeguridadDias !== undefined) data.margenSeguridadDias = Number(margenSeguridadDias);
     if (consumoDiarioDefecto !== undefined) data.consumoDiarioDefecto = Number(consumoDiarioDefecto);
+    if (unidad !== undefined) data.unidad = String(unidad).trim();
     if (diaSemanal !== undefined) data.diaSemanal = diaSemanal;
     if (activo !== undefined) data.activo = activo;
     data.updatedAt = new Date().toISOString();
@@ -58,6 +59,7 @@ export async function saveProducto(body) {
       margenSeguridadUnidades: 0,
       stockActual: 0,
       consumoDiarioDefecto: consumoDiarioDefecto === undefined ? 10 : Number(consumoDiarioDefecto),
+      unidad: (unidad !== undefined && String(unidad).trim()) ? String(unidad).trim() : "uds.",
       diaSemanal: diaSemanal ?? null,
       orden: maxOrder + 1,
       createdAt: now,

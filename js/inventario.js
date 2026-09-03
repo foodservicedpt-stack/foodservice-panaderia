@@ -7,34 +7,46 @@ import { quantityInput } from "./components.js";
 renderNav("inventario.html");
 
 const TIPOS = { AMASADA: "Amasada", AJUSTE: "Ajuste", CONSUMO: "Consumo", CORRECCION: "Corrección", COMPRA: "Compra" };
+const STATUS_LABELS = { ok: "En stock", warning: "Bajo", danger: "Crítico", info: "Sin datos" };
+
+function coverageText(p, coverageDays) {
+  return coverageDays === null ? "Sin datos" : formatCoverageDays(coverageDays);
+}
+
+function productCard(p) {
+  const coverageDays = calcCoverageDays(p.stockActual || 0, [], p.consumoDiarioDefecto || 0);
+  const status = getStockStatus(coverageDays, p.margenSeguridadDias || 0);
+  const rate = p.consumoDiarioDefecto || 0;
+  const unidad = escapeHtml(p.unidad || "uds.");
+  const rateLabel = rate > 0 ? `a ${rate}/día` : "";
+  return `<article class="product-card" data-status="${status}">
+    <div class="product-card-head">
+      <h3 class="product-card-name">${escapeHtml(p.nombre)}</h3>
+      <span class="badge ${status}">${STATUS_LABELS[status]}</span>
+    </div>
+    <div class="product-card-body">
+      <div class="product-card-stock">
+        <span class="product-stock-value">${p.stockActual ?? 0}</span>
+        <span class="product-stock-unit">${unidad}</span>
+      </div>
+      <div class="product-card-meta">
+        <span class="coverage-meta">Cobertura <strong>${coverageText(p, coverageDays)}</strong></span>
+        ${rateLabel ? `<span class="rate-meta">${rateLabel}</span>` : ""}
+      </div>
+    </div>
+    <div class="product-card-action">
+      ${quantityInput({ id: `qty-${p.id}`, label: `Cantidad a ajustar para ${p.nombre}`, min: "", className: "quantity-input product-qty-input", placeholder: "+/- cantidad" })}
+      <button class="ajustar-btn" data-id="${p.id}">Ajustar</button>
+    </div>
+  </article>`;
+}
 
 async function load() {
   const { products, movimientos } = await getInventario();
 
-  document.getElementById("productos-body").innerHTML = products
-    .map((p) => {
-      const coverageDays = calcCoverageDays(p.stockActual || 0, [], p.consumoDiarioDefecto || 0);
-      const status = getStockStatus(coverageDays, p.margenSeguridadDias || 0);
-      const rate = p.consumoDiarioDefecto || 0;
-      const coverageCell = coverageDays === null
-        ? `<span class="badge info">Sin datos</span>`
-        : `<div>
-             <span class="badge ${status}">${formatCoverageDays(coverageDays)}</span>
-             ${rate > 0 ? `<small class="meta-text rate-text">a ${rate}/día</small>` : ""}
-           </div>`;
-      return `<tr>
-        <td data-label="Producto">${escapeHtml(p.nombre)}</td>
-        <td data-label="Stock">${p.stockActual ?? 0}</td>
-        <td data-label="Cobertura">${coverageCell}</td>
-        <td data-label="Ajustar">
-          <div class="row">
-            ${quantityInput({ id: `qty-${p.id}`, label: `Cantidad a ajustar para ${p.nombre}`, min: "" })}
-            <button data-id="${p.id}" class="ajustar-btn">Aplicar</button>
-          </div>
-        </td>
-      </tr>`;
-    })
-    .join("") || `<tr><td colspan="4" class="empty">No hay productos de tipo STOCK activos</td></tr>`;
+  document.getElementById("productos-list").innerHTML = products.length
+    ? products.map(productCard).join("")
+    : `<p class="empty">No hay productos de tipo STOCK activos</p>`;
 
   document.getElementById("movimientos-body").innerHTML =
     movimientos
@@ -58,13 +70,13 @@ async function load() {
         toast("Introduce una cantidad válida (positiva o negativa)", "error");
         return;
       }
+      const notas = document.getElementById("ajuste-notas").value.trim();
+      if (!notas) {
+        toast("Indica el motivo del ajuste", "error");
+        return;
+      }
       btn.disabled = true;
       try {
-        const notas = document.getElementById("ajuste-notas").value.trim();
-        if (!notas) {
-          toast("Indica el motivo del ajuste", "error");
-          return;
-        }
         await addMovimiento({ productoId: id, cantidad, tipo: "AJUSTE", notas });
         toast("Stock actualizado", "success");
         input.value = "";

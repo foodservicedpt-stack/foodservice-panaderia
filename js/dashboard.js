@@ -74,6 +74,18 @@ async function load() {
     document.getElementById("amasadoras-card").hidden = false;
     renderAmasadorasInto(document.getElementById("amasadoras-list"), pendientes, new Date(), handleConfirm);
   }
+
+  // Estado vacío (nada que atender)
+  const focus = document.getElementById("dashboard-focus");
+  if (!alerts.length && !pendientes.length) {
+    focus.hidden = false;
+    focus.innerHTML = `<div class="empty-state-ok">
+      <span class="empty-state-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
+      <div><strong>Todo en orden</strong><p>No hay productos bajo mínimos ni amasadoras pendientes.</p></div>
+    </div>`;
+  } else {
+    focus.hidden = true;
+  }
 }
 
 loadWithState(document.getElementById("page-status"), load);

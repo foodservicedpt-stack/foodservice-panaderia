@@ -32,6 +32,10 @@ async function load() {
           <label class="field-label" for="margen-${p.id}">Margen seguridad</label>
           <input type="number" id="margen-${p.id}" value="${p.margenSeguridadDias ?? 2}" data-field="margenSeguridadDias" data-id="${p.id}" aria-label="Margen de seguridad (días)" />
         </div>
+        <div class="setting-field setting-unit">
+          <label class="field-label" for="unidad-${p.id}">Unidad</label>
+          <input type="text" id="unidad-${p.id}" value="${escapeHtml(p.unidad || "uds.")}" data-field="unidad" data-id="${p.id}" aria-label="Unidad" maxlength="12" />
+        </div>
         <button data-id="${p.id}" class="save-btn secondary">Guardar</button>
       </div>
     </div>`

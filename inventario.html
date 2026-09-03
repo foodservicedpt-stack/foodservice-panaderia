@@ -19,7 +19,7 @@
   <a class="skip-link" href="#main">Saltar al contenido</a>
   <main id="main">
     <div id="page-status" class="page-status" role="status" aria-live="polite"></div>
-    <div class="card">
+    <section class="page-section">
       <div class="row-between section-heading">
         <div>
           <h2>Inventario</h2>
@@ -29,11 +29,8 @@
           <input type="text" id="ajuste-notas" maxlength="200" placeholder="Ej. Merma, recepción..." />
         </label>
       </div>
-      <div class="table-scroll"><table>
-        <thead><tr><th>Producto</th><th>Stock actual</th><th>Cobertura</th><th>Ajustar</th></tr></thead>
-        <tbody id="productos-body"></tbody>
-      </table></div>
-    </div>
+      <div id="productos-list" class="product-grid"></div>
+    </section>
 
     <div class="card">
       <h3>Últimos movimientos</h3>

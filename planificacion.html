@@ -19,17 +19,23 @@
   <a class="skip-link" href="#main">Saltar al contenido</a>
   <main id="main">
     <div id="page-status" class="page-status" role="status" aria-live="polite"></div>
-    <div class="card">
-      <div class="row-between">
-        <h2>Planificación semanal</h2>
-        <div class="row">
-          <button id="prev-week" class="secondary">◀ Semana anterior</button>
-          <strong id="week-label"></strong>
-          <button id="next-week" class="secondary">Semana siguiente ▶</button>
+    <section class="page-section">
+      <h2>Planificación semanal</h2>
+      <div class="plan-head">
+        <div class="plan-nav">
+          <button class="icon-btn" id="prev-week" aria-label="Semana anterior">‹</button>
+          <div class="plan-nav-current">
+            <strong id="week-label"></strong>
+            <span class="plan-nav-sub" id="week-sub"></span>
+          </div>
+          <button class="icon-btn" id="next-week" aria-label="Semana siguiente">›</button>
         </div>
+        <button class="today-btn secondary" id="today-btn">Hoy</button>
       </div>
-      <div id="plan-table-wrap"></div>
-    </div>
+      <div id="plan-mobile" class="plan-mobile"></div>
+      <div id="plan-desktop" class="plan-desktop"></div>
+      <p class="meta-text plan-help">Introduce la cantidad total planificada para cada día. Los cambios se guardan automáticamente al salir del campo.</p>
+    </section>
   </main>
 
   <script type="module" src="js/planificacion.js"></script>

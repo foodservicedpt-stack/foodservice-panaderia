@@ -7,6 +7,7 @@
  * @property {number} stockActual
  * @property {number} consumoDiarioDefecto
  * @property {number} margenSeguridadDias
+ * @property {string} [unidad]
  */
 
 /**
@@ -22,7 +23,7 @@ import { parseDateString } from "./utils.js";
 export const CATEGORIES = Object.freeze(["STOCK", "SEMANAL", "OTRO"]);
 export const AMASADORA_STATES = Object.freeze(["PLANIFICADA", "EN_FERMENTACION", "COMPLETADA"]);
 
-export function validateProductInput({ nombre, categoria, margenSeguridadDias, consumoDiarioDefecto }) {
+export function validateProductInput({ nombre, categoria, margenSeguridadDias, consumoDiarioDefecto, unidad }) {
   if (nombre !== undefined && (!String(nombre).trim() || String(nombre).length > 120)) {
     throw new Error("El nombre debe tener entre 1 y 120 caracteres");
   }
@@ -31,6 +32,9 @@ export function validateProductInput({ nombre, categoria, margenSeguridadDias, c
   }
   if (margenSeguridadDias !== undefined) validateNonNegativeInteger(margenSeguridadDias, "El margen de seguridad");
   if (consumoDiarioDefecto !== undefined) validateNonNegativeInteger(consumoDiarioDefecto, "El consumo diario");
+  if (unidad !== undefined && (typeof unidad !== "string" || unidad.trim().length > 12)) {
+    throw new Error("La unidad no puede superar 12 caracteres");
+  }
 }
 
 export function validateNonNegativeInteger(value, fieldName) {
