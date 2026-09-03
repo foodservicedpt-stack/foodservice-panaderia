@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Panadería · Inventario</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <main>
+    <div class="card">
+      <h2>📦 Inventario</h2>
+      <table>
+        <thead><tr><th>Producto</th><th>Stock actual</th><th>Cobertura</th><th>Ajustar</th></tr></thead>
+        <tbody id="productos-body"></tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <h3>Últimos movimientos</h3>
+      <table>
+        <thead><tr><th>Fecha</th><th>Producto</th><th>Cantidad</th><th>Tipo</th><th>Notas</th></tr></thead>
+        <tbody id="movimientos-body"></tbody>
+      </table>
+    </div>
+  </main>
+
+  <script type="module" src="js/inventario.js"></script>
+</body>
+</html>

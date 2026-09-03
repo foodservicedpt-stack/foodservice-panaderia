@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Panadería · Configuración</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <main>
+    <div class="card">
+      <h2>⚙️ Productos</h2>
+      <div id="productos-list"></div>
+      <button id="nuevo-producto-btn" class="secondary" style="margin-top:10px;">+ Nuevo producto</button>
+    </div>
+
+    <div class="card">
+      <h3>Cambiar contraseña de equipo</h3>
+      <div class="error-msg" id="pass-error"></div>
+      <div class="success-msg" id="pass-success"></div>
+      <input type="password" id="current-password" placeholder="Contraseña actual" />
+      <input type="password" id="new-password" placeholder="Nueva contraseña" />
+      <button id="change-pass-btn">Cambiar contraseña</button>
+    </div>
+  </main>
+
+  <script type="module" src="js/configuracion.js"></script>
+</body>
+</html>

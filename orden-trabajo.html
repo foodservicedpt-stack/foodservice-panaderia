@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Panadería · Orden de trabajo</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <main>
+    <div class="card">
+      <div class="row-between">
+        <h2>✅ Orden de trabajo</h2>
+        <div class="row">
+          <button id="prev-day" class="secondary">◀</button>
+          <strong id="day-label"></strong>
+          <button id="next-day" class="secondary">▶</button>
+        </div>
+      </div>
+      <div id="items-list"></div>
+    </div>
+
+    <div class="card">
+      <h3>Nota del día</h3>
+      <textarea id="nota-input" rows="3" placeholder="Añade una nota para hoy..."></textarea>
+      <button id="guardar-nota-btn">Guardar nota</button>
+    </div>
+  </main>
+
+  <script type="module" src="js/orden-trabajo.js"></script>
+</body>
+</html>

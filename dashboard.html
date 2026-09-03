@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Panadería · Inicio</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <main>
+    <div class="card">
+      <p id="fecha" style="color:#7a6a58; margin-bottom:2px;"></p>
+      <h2 id="saludo">Hola, equipo</h2>
+    </div>
+
+    <div class="card" id="alerts-card" style="display:none;">
+      <h3>⚠️ Productos con stock bajo</h3>
+      <table>
+        <thead><tr><th>Producto</th><th>Stock</th><th>Cobertura (días)</th></tr></thead>
+        <tbody id="alerts-body"></tbody>
+      </table>
+    </div>
+
+    <div class="card" id="amasadoras-card" style="display:none;">
+      <h3>🍞 Amasadoras en fermentación</h3>
+      <div id="amasadoras-list"></div>
+    </div>
+
+    <div class="grid grid-3">
+      <a href="inventario.html" class="card stat" style="text-decoration:none;">
+        <div class="value">📦</div>
+        <div class="label">Inventario</div>
+      </a>
+      <a href="planificacion.html" class="card stat" style="text-decoration:none;">
+        <div class="value">📅</div>
+        <div class="label">Planificación</div>
+      </a>
+      <a href="orden-trabajo.html" class="card stat" style="text-decoration:none;">
+        <div class="value">✅</div>
+        <div class="label">Orden de trabajo</div>
+      </a>
+    </div>
+  </main>
+
+  <script type="module" src="js/dashboard.js"></script>
+</body>
+</html>

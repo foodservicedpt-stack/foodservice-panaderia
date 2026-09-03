@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Panadería · Amasadoras</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <main>
+    <div class="card">
+      <div class="row-between">
+        <h2>🍞 Amasadoras</h2>
+        <button id="nueva-btn">+ Nueva amasadora</button>
+      </div>
+      <div id="nueva-form" class="card" style="display:none; background:var(--cream-dark); box-shadow:none;">
+        <label>Producto</label>
+        <select id="producto-select"></select>
+        <label>Fecha de inicio</label>
+        <input type="date" id="fecha-input" />
+        <div class="row">
+          <button id="crear-btn">Crear</button>
+          <button id="cancelar-btn" class="secondary">Cancelar</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>En fermentación</h3>
+      <div id="pendientes-list"></div>
+    </div>
+
+    <div class="card">
+      <h3>Historial</h3>
+      <table>
+        <thead><tr><th>Producto</th><th>Fecha inicio</th><th>Estado</th><th>Piezas</th></tr></thead>
+        <tbody id="historial-body"></tbody>
+      </table>
+    </div>
+  </main>
+
+  <script type="module" src="js/amasadoras.js"></script>
+</body>
+</html>

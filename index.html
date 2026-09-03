@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Panadería · Acceso</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body class="login-page">
+  <div class="login-card">
+    <h1>🥖 Panadería</h1>
+    <p>Introduce la contraseña del equipo para continuar</p>
+    <div class="error-msg" id="error"></div>
+    <form id="login-form">
+      <input type="password" id="password" placeholder="Contraseña" autofocus />
+      <button type="submit" id="submit-btn">Entrar</button>
+    </form>
+  </div>
+
+  <script type="module">
+    import { login, isLoggedIn } from "./js/auth.js";
+
+    if (isLoggedIn()) window.location.href = "dashboard.html";
+
+    const form = document.getElementById("login-form");
+    const errorEl = document.getElementById("error");
+    const btn = document.getElementById("submit-btn");
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      errorEl.textContent = "";
+      btn.disabled = true;
+      btn.textContent = "Entrando...";
+      const password = document.getElementById("password").value;
+      try {
+        const result = await login(password);
+        if (result.error) {
+          errorEl.textContent = result.error;
+          btn.disabled = false;
+          btn.textContent = "Entrar";
+        } else {
+          window.location.href = "dashboard.html";
+        }
+      } catch (err) {
+        console.error(err);
+        errorEl.textContent = "Error de conexión. Inténtalo de nuevo.";
+        btn.disabled = false;
+        btn.textContent = "Entrar";
+      }
+    });
+  </script>
+</body>
+</html>

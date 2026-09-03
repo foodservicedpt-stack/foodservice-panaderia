@@ -1,0 +1,16 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // NOTA DE SEGURIDAD:
+    // Esta app usa una contraseña de equipo simple (no Firebase Authentication),
+    // así que estas reglas están abiertas para que la app funcione desde GitHub Pages.
+    // Esto significa que, en teoría, cualquiera con la URL del proyecto podría
+    // leer/escribir datos directamente saltándose la pantalla de login.
+    // Es el mismo nivel de seguridad que las otras apps del obrador en Firebase.
+    // Si en el futuro quieres cerrarlo más, se puede añadir Firebase Authentication
+    // (login anónimo + reglas basadas en request.auth) sin cambiar el resto de la app.
+    match /{document=**} {
+      allow read, write: if true;
+    }
+  }
+}
