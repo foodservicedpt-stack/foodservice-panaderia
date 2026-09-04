@@ -283,3 +283,53 @@ export function forecastStock({ stockActual, consumoDiarioDefecto, planByKey, pr
     empty: stock <= 0,
   };
 }
+// ---------- Deducción diaria automática de stock según la planificación ----------
+
+/** Devuelve la fecha siguiente a la última deducción registrada (o hoy si no hay historial). */
+function deductionStartDate(producto, today) {
+  if (producto && producto.ultimaDeduccion) {
+    return addCalendarDaysLocal(parseDateString(producto.ultimaDeduccion), 1);
+  }
+  return today;
+}
+
+/** Cantidad total planificada para un producto en una fecha concreta. */
+function planTotal(plan) {
+  if (!plan) return 0;
+  return (Number(plan.desayuno) || 0) + (Number(plan.comida) || 0) + (Number(plan.extra) || 0);
+}
+
+/** Deducciones pendientes (producto + fecha + cantidad). Descuenta cada día ya
+ *  pasado: desde el día siguiente a la última deducción de cada producto hasta ayer
+ *  inclusive (hoy queda como previsión y se descuenta cuando se abra la app mañana).
+ *  Solo incluye días con planificación > 0. Es una función pura para testearla en Node. */
+export function pendingDeductions({ products, planByKey, todayStr }) {
+  const today = typeof todayStr === "string" ? parseDateString(todayStr) : new Date(todayStr);
+  const endMs = addCalendarDaysLocal(today, -1).getTime();
+  const out = [];
+  for (const p of products || []) {
+    if (p.categoria !== "STOCK" || p.activo === false) continue;
+    const from = deductionStartDate(p, today);
+    if (from.getTime() > endMs) continue;
+    for (let d = from; d.getTime() <= endMs; d = addCalendarDaysLocal(d, 1)) {
+      const fecha = toDateString(d);
+      const cantidad = planTotal(planByKey[`${p.id}_${fecha}`]);
+      if (cantidad > 0) out.push({ productoId: p.id, fecha, cantidad });
+    }
+  }
+  return out;
+}
+
+/** Aplica las deducciones de un producto sin dejar el stock en negativo.
+ *  Devuelve el stock final y la lista de consumos realmente aplicados. */
+export function applyConsumptionToStock(stockActual, items) {
+  let stock = Number(stockActual) || 0;
+  const applied = [];
+  for (const it of items || []) {
+    const consume = Math.min(Number(it.cantidad) || 0, Math.max(0, stock));
+    if (consume <= 0) continue;
+    stock -= consume;
+    applied.push({ fecha: it.fecha, cantidad: consume });
+  }
+  return { stockFinal: stock, applied };
+}

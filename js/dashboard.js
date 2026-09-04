@@ -1,5 +1,5 @@
 import { renderNav } from "./nav.js";
-import { getProductosStock, getAmasadoras, confirmarAmasadora, cancelarProduccion, eliminarProduccion, getPlanificacion } from "./data.js";
+import { getProductosStock, getAmasadoras, confirmarAmasadora, cancelarProduccion, eliminarProduccion, getPlanificacion, processDailyConsumption } from "./data.js";
 import { getGreeting, calcCoverageDays, getStockStatus, formatCoverageDays, formatDateES, toDateString, addCalendarDays } from "./utils.js";
 import { escapeHtml, loadWithState, toast } from "./ui.js";
 import { renderAmasadorasInto } from "./amasadoras-ui.js";
@@ -58,6 +58,12 @@ async function buildForecastFor(products) {
 }
 
 async function load() {
+  // Descuenta automáticamente la planificación de cada día (si aún no se ha hecho).
+  let settle = null;
+  try { settle = await processDailyConsumption(); } catch (err) { console.warn("[dailyConsumption]", err.message); }
+  if (settle && settle.appliedDays > 0) {
+    toast(settle.appliedDays === 1 ? "Se descontó el consumo planificado de ayer." : `Se descontó el consumo planificado de ${settle.appliedDays} días.`, "info", { title: "Stock actualizado" });
+  }
   const [products, amasadoras] = await Promise.all([getProductosStock(), getAmasadoras()]);
   const forecast = await buildForecastFor(products);
   const withStatus = products.map((p) => {

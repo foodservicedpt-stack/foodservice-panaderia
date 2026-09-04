@@ -31,6 +31,10 @@ const firebaseConfig = {
 export const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app);
 
+// Clave VAPID del "Web Push certificate" del proyecto (Project Settings → Cloud Messaging).
+// Es pública y necesaria para registrar el token de notificaciones en el navegador.
+export const VAPID_KEY = "TU_CLAVE_VAPID_AQUI"; // <-- Reemplázala por la de tu proyecto
+
 export {
   collection,
   doc,

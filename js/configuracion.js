@@ -1,5 +1,6 @@
 import { renderNav } from "./nav.js";
 import { getProductos, saveProducto } from "./data.js";
+import { enablePushNotifications, disablePushNotifications } from "./push.js";
 import { escapeHtml, loadWithState, toast } from "./ui.js";
 
 renderNav("configuracion.html");
@@ -107,4 +108,55 @@ document.getElementById("crear-producto-btn").addEventListener("click", async ()
   }
 });
 
+// ---------- Notificaciones push ----------
+function refreshNotificationState() {
+  const activar = document.getElementById("notificaciones-activar");
+  const desactivar = document.getElementById("notificaciones-desactivar");
+  const estado = document.getElementById("notificaciones-estado");
+  if (!activar || !desactivar || !estado) return;
+  const supported = "Notification" in window;
+  if (!supported) {
+    activar.hidden = true; desactivar.hidden = true;
+    estado.textContent = "Este dispositivo no admite notificaciones.";
+    return;
+  }
+  const granted = Notification.permission === "granted";
+  activar.hidden = granted;
+  desactivar.hidden = !granted;
+  estado.textContent = granted
+    ? "Notificaciones activadas en este dispositivo."
+    : Notification.permission === "denied"
+      ? "Permiso denegado. Actívalo desde los ajustes del navegador."
+      : "Las notificaciones están desactivadas.";
+}
+
+document.getElementById("notificaciones-activar")?.addEventListener("click", async () => {
+  const btn = document.getElementById("notificaciones-activar");
+  btn.disabled = true;
+  try {
+    await enablePushNotifications();
+    toast("Notificaciones activadas", "success");
+  } catch (err) {
+    toast("No se pudieron activar: " + err.message, "error");
+  } finally {
+    btn.disabled = false;
+    refreshNotificationState();
+  }
+});
+
+document.getElementById("notificaciones-desactivar")?.addEventListener("click", async () => {
+  const btn = document.getElementById("notificaciones-desactivar");
+  btn.disabled = true;
+  try {
+    await disablePushNotifications();
+    toast("Notificaciones desactivadas", "info");
+  } catch (err) {
+    toast("Error: " + err.message, "error");
+  } finally {
+    btn.disabled = false;
+    refreshNotificationState();
+  }
+});
+
+refreshNotificationState();
 loadWithState(document.getElementById("page-status"), load);

@@ -89,7 +89,7 @@ test("valida la unidad del producto", () => {
   assert.throws(() => validateProductInput({ nombre: "Pan", unidad: "x".repeat(13) }), /unidad/);
 });
 
-import { produccionStages, getProduccionStage, isProduccionVisible, produccionTipo, forecastStock } from "../js/domain.js";
+import { produccionStages, getProduccionStage, isProduccionVisible, produccionTipo, forecastStock, pendingDeductions, applyConsumptionToStock } from "../js/domain.js";
 
 test("etapas y horarios de cada tipo de producción", () => {
   assert.equal(produccionStages("MASAS", "2026-09-20", "2026-09-15T10:00:00.000Z").length, 4);
@@ -118,4 +118,82 @@ test("previsión de stock según la planificación", () => {
   assert.equal(f.planTomorrow, 60);
   assert.equal(f.projectedTomorrow, 40);
   assert.equal(f.shortTomorrow, false);
+});
+test("deducciones pendientes: sin historial no descuenta días pasados ni hoy", () => {
+  const products = [{ id: "p1", categoria: "STOCK", activo: true }];
+  const planByKey = {
+    "p1_2026-09-19": { desayuno: 50, comida: 0, extra: 0 },
+    "p1_2026-09-20": { desayuno: 30, comida: 20, extra: 0 },
+  };
+  const d = pendingDeductions({ products, planByKey, todayStr: "2026-09-20" });
+  assert.deepEqual(d, []);
+});
+
+test("deducciones pendientes: descuenta la planificación de ayer, no la de hoy", () => {
+  const products = [{ id: "p1", categoria: "STOCK", activo: true, ultimaDeduccion: "2026-09-18" }];
+  const planByKey = {
+    "p1_2026-09-19": { desayuno: 30, comida: 0, extra: 0 },
+    "p1_2026-09-20": { desayuno: 99, comida: 0, extra: 0 },
+  };
+  const d = pendingDeductions({ products, planByKey, todayStr: "2026-09-20" });
+  assert.deepEqual(d, [{ productoId: "p1", fecha: "2026-09-19", cantidad: 30 }]);
+});
+
+test("deducciones pendientes: no repite días ya descontados", () => {
+  const products = [{ id: "p1", categoria: "STOCK", activo: true, ultimaDeduccion: "2026-09-19" }];
+  const planByKey = {
+    "p1_2026-09-19": { desayuno: 99, comida: 0, extra: 0 },
+    "p1_2026-09-20": { desayuno: 50, comida: 0, extra: 0 },
+  };
+  const d = pendingDeductions({ products, planByKey, todayStr: "2026-09-20" });
+  assert.deepEqual(d, []);
+});
+
+test("deducciones pendientes: se pone al día tras varios días", () => {
+  const products = [{ id: "p1", categoria: "STOCK", activo: true, ultimaDeduccion: "2026-09-16" }];
+  const planByKey = {
+    "p1_2026-09-17": { desayuno: 10, comida: 0, extra: 0 },
+    "p1_2026-09-18": { desayuno: 20, comida: 0, extra: 0 },
+    "p1_2026-09-19": { desayuno: 10, comida: 10, extra: 10 },
+    "p1_2026-09-20": { desayuno: 500, comida: 0, extra: 0 },
+  };
+  const d = pendingDeductions({ products, planByKey, todayStr: "2026-09-20" });
+  assert.deepEqual(d, [
+    { productoId: "p1", fecha: "2026-09-17", cantidad: 10 },
+    { productoId: "p1", fecha: "2026-09-18", cantidad: 20 },
+    { productoId: "p1", fecha: "2026-09-19", cantidad: 30 },
+  ]);
+});
+
+test("deducciones pendientes: ignora días sin planificación", () => {
+  const products = [{ id: "p1", categoria: "STOCK", activo: true, ultimaDeduccion: "2026-09-18" }];
+  const d = pendingDeductions({ products, planByKey: {}, todayStr: "2026-09-20" });
+  assert.deepEqual(d, []);
+});
+
+test("deducciones pendientes: ignora productos no STOCK o inactivos", () => {
+  const products = [
+    { id: "p1", categoria: "STOCK", activo: true, ultimaDeduccion: "2026-09-18" },
+    { id: "p2", categoria: "SEMANAL", activo: true, ultimaDeduccion: "2026-09-18" },
+    { id: "p3", categoria: "STOCK", activo: false, ultimaDeduccion: "2026-09-18" },
+  ];
+  const planByKey = {
+    "p1_2026-09-19": { desayuno: 10, comida: 0, extra: 0 },
+    "p2_2026-09-19": { desayuno: 10, comida: 0, extra: 0 },
+    "p3_2026-09-19": { desayuno: 10, comida: 0, extra: 0 },
+  };
+  const d = pendingDeductions({ products, planByKey, todayStr: "2026-09-20" });
+  assert.deepEqual(d, [{ productoId: "p1", fecha: "2026-09-19", cantidad: 10 }]);
+});
+
+test("aplica consumo sin dejar stock negativo ni descontar de más", () => {
+  const { stockFinal, applied } = applyConsumptionToStock(100, [
+    { fecha: "2026-09-20", cantidad: 30 },
+    { fecha: "2026-09-21", cantidad: 80 },
+  ]);
+  assert.equal(stockFinal, 0);
+  assert.deepEqual(applied, [
+    { fecha: "2026-09-20", cantidad: 30 },
+    { fecha: "2026-09-21", cantidad: 70 },
+  ]);
 });

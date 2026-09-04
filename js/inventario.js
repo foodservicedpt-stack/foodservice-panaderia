@@ -1,5 +1,5 @@
 import { renderNav } from "./nav.js";
-import { getInventario, addMovimiento, getPlanificacion } from "./data.js";
+import { getInventario, addMovimiento, getPlanificacion, processDailyConsumption } from "./data.js";
 import { calcCoverageDays, getStockStatus, formatCoverageDays, formatDateES, toDateString, addCalendarDays } from "./utils.js";
 import { escapeHtml, loadWithState, toast } from "./ui.js";
 import { quantityInput } from "./components.js";
@@ -72,6 +72,12 @@ function productCard(p, fore) {
 }
 
 async function load() {
+  // Descuenta automáticamente la planificación de cada día (si aún no se ha hecho).
+  let settle = null;
+  try { settle = await processDailyConsumption(); } catch (err) { console.warn("[dailyConsumption]", err.message); }
+  if (settle && settle.appliedDays > 0) {
+    toast(settle.appliedDays === 1 ? "Se descontó el consumo planificado de ayer." : `Se descontó el consumo planificado de ${settle.appliedDays} días.`, "info", { title: "Stock actualizado" });
+  }
   const { products, movimientos } = await getInventario();
   const forecast = await buildForecast(products);
   document.getElementById("productos-list").innerHTML = products.length
