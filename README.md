@@ -69,41 +69,40 @@ La app puede avisar en el móvil con una notificación diaria. Lo que hay en el 
   colección `pushSubscriptions`. Se carga solo en Configuración (no lastra las demás páginas).
 - Service worker: [`sw.js`](sw.js) escucha `push` (segundo plano), muestra el aviso y con
   `notificationclick` abre la app. La caché/PWA sigue intacta (versión `panaderia-v2`).
-- Backend: [`functions/index.js`](functions/index.js) con `dailyPush` (programada a las 06:30
-  Europe/Madrid) y `dailyPushHttp` (alternativa para cron gratuito). `firebase.json` ya incluye
-  la configuración de funciones.
+- **Envío diario (gratuito, sin Blaze)**: workflow de GitHub Actions
+  [`.github/workflows/daily-push.yml`](.github/workflows/daily-push.yml) + script
+  [`.github/scripts/daily-push.mjs`](.github/scripts/daily-push.mjs). Lee Firestore, resume la
+  planificación del día y los productos sin stock, y envía por FCM. Corre ~06:30 Madrid.
+- Alternativa con Cloud Functions (requiere **Blaze**):
+  [`functions/index.js`](functions/index.js) con `dailyPush` programada a las 06:30. Solo hace
+  falta si prefieres Cloud Functions y subes a Blaze.
 
-**La clave VAPID no es un secreto**: es el certificado público de Web Push y el navegador lo
-necesita. Ninguna clave privada ni service account está en el frontend (la función usa las
-credenciales del propio entorno de Firebase).
+**Claves y secretos**: la `VAPID_KEY` es el certificado **público** de Web Push (no es un
+secreto). El frontend no contiene ninguna clave privada. El **service account** (secreto) solo se
+guarda como secreto del repositorio de GitHub, nunca en el código.
 
 ### Pasos manuales (una sola vez)
 
-1. Firebase Console → abre el proyecto `foodservice-panaderia` → **Project settings → Cloud
-   Messaging**. Activa Cloud Messaging si no está activado.
+1. Firebase Console → proyecto `foodservice-panaderia` → **Project settings → Cloud Messaging**.
+   Activa Cloud Messaging si no lo está.
 2. En **Web Push certificates**, copiar la **Key pair** y pegarla como `VAPID_KEY` en
-   [`js/firebase-config.js`](js/firebase-config.js) (es el único valor que se cambia en código).
-3. En **Configuración → Notificaciones en el móvil**, pulsar **Activar notificaciones** y aceptar
-   el permiso. En iOS, primero **instala la app en la pantalla de inicio** (Compartir → Añadir a
-   pantalla de inicio).
+   [`js/firebase-config.js`](js/firebase-config.js).
+3. En **Project settings → Service accounts**, pulsar **Generate new private key** y descargar el
+   JSON del service account.
+4. En GitHub → repo → **Settings → Secrets and variables → Actions** → **New repository secret**:
+   - Nombre: `FIREBASE_SERVICE_ACCOUNT`
+   - Valor: pega el contenido completo del JSON.
+5. En **Configuración → Notificaciones en el móvil**, pulsar **Activar notificaciones** y aceptar
+   el permiso (en iOS, primero instala la app en la pantalla de inicio).
 
-### Desplegar la Cloud Function
+### El aviso diario (GitHub Actions)
 
-```bash
-cd functions && npm install && cd ..
-firebase deploy --only functions --project foodservice-panaderia
-```
-
-- La función **programada** (`dailyPush`) requiere el plan **Blaze** (Cloud Scheduler).
-- Si no quieres Blaze, usa la **HTTP** (`dailyPushHttp`): déjala desplegada y disparamos su URL
-  con un cron gratuito (p. ej. GitHub Actions).
-
-Ejemplo de cron gratuito con GitHub Actions (`.github/workflows/daily-push.yml`): llama a la URL
-de `dailyPushHttp` enviando el header `x-cron-secret` con el valor de la variable `CRON_SECRET`
-definida en el proyecto de Firebase (Functions → Environment variables).
+El workflow de [`daily-push.yml`](.github/workflows/daily-push.yml) se ejecuta con el cron
+(04:30 y 05:30 UTC) y el script espera a las **06:30 Madrid** y es idempotente (marca en
+`pushMeta/daily` para no repetir). Puedes forzarlo con el botón **Run workflow** del tab Actions.
 
 - **iOS**: las notificaciones solo llegan si la PWA está instalada (pantalla de inicio) y es
-  iOS 16.4 o superior.
+  iOS 16.4+.
 - **Primer plano**: el aviso se muestra como toast dentro de la app.
 - La deducción diaria muestra su propio toast al abrir Inicio o Inventario.
 

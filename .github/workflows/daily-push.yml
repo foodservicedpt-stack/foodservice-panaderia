@@ -1,13 +1,10 @@
-name: Enviar aviso diario del obrador
-
-# Dispara la Cloud Function dailyPushHttp (alternativa al plan Blaze).
-# Necesitas dos secretos de repositorio:
-#   FIREBASE_FUNCTION_URL -> URL de despliegue de dailyPushHttp
-#   CRON_SECRET           -> el mismo valor que "CRON_SECRET" en Firebase Functions (env)
-# Nota: el cron de GitHub Actions va en UTC. 05:30 UTC ≈ 06:30 España en invierno (07:30 en verano).
+name: Aviso diario del obrador (push)
 
 on:
   schedule:
+    # 04:30 y 05:30 UTC. El script solo envía a partir de las 06:30 Madrid y es idempotente,
+    # así que cubre tanto invierno (UTC+1) como verano (UTC+2).
+    - cron: "30 4 * * *"
     - cron: "30 5 * * *"
   workflow_dispatch: {}
 
@@ -15,10 +12,17 @@ jobs:
   notify:
     runs-on: ubuntu-latest
     steps:
-      - name: Llamar a la Cloud Function
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Instalar dependencias
+        run: npm install --prefix .github/scripts
+      - name: Escribir credenciales de servicio (secreto)
         env:
-          URL: ${{ secrets.FIREBASE_FUNCTION_URL }}
-          SECRET: ${{ secrets.CRON_SECRET }}
-        run: |
-          if [ -z "$URL" ]; then echo "Falta FIREBASE_FUNCTION_URL"; exit 0; fi
-          curl -fsS -X POST "$URL" -H "x-cron-secret: $SECRET" || echo "El aviso diario no se pudo enviar"
+          SA: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: printf '%s' "$SA" > "$RUNNER_TEMP/firebase-sa.json"
+      - name: Enviar aviso diario
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/firebase-sa.json
+        run: node .github/scripts/daily-push.mjs
