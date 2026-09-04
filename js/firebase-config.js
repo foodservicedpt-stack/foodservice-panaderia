@@ -33,7 +33,7 @@ export const db = getFirestore(app);
 
 // Clave VAPID del "Web Push certificate" del proyecto (Project Settings → Cloud Messaging).
 // Es pública y necesaria para registrar el token de notificaciones en el navegador.
-export const VAPID_KEY = "TU_CLAVE_VAPID_AQUI"; // <-- Reemplázala por la de tu proyecto
+export const VAPID_KEY = "BD4_rnVknqnyu4JAYxzmjezGVixkIoQPM9r3wdTlsv3nC6Yyemd2lmGrZbJi87h4B_Klf4i6aDerodSbx3pMrew"; // <-- Reemplázala por la de tu proyecto
 
 export {
   collection,
