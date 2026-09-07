@@ -1,5 +1,5 @@
 import { renderNav } from "./nav.js";
-import { getProductosStock, getAmasadoras, confirmarAmasadora, cancelarProduccion, eliminarProduccion, getPlanificacion, processDailyConsumption } from "./data.js";
+import { getProductosStock, getAmasadoras, confirmarAmasadora, cancelarProduccion, eliminarProduccion, getPlanificacion, processDailyConsumption, confirmarConsumo } from "./data.js";
 import { getGreeting, calcCoverageDays, getStockStatus, formatCoverageDays, formatDateES, toDateString, addCalendarDays } from "./utils.js";
 import { escapeHtml, loadWithState, toast } from "./ui.js";
 import { renderAmasadorasInto } from "./amasadoras-ui.js";
@@ -57,6 +57,81 @@ async function buildForecastFor(products) {
   }, {});
 }
 
+async function renderConfirmacion() {
+  const container = document.getElementById("confirm-card");
+  const body = document.getElementById("confirm-body");
+  if (!container || !body) return 0;
+  const tomorrow = toDateString(addCalendarDays(new Date(), 1));
+  let planificaciones = [];
+  let products = [];
+  try {
+    const res = await getPlanificacion(tomorrow, tomorrow);
+    planificaciones = res.planificaciones;
+    products = res.products;
+  } catch (err) { console.warn("[confirm]", err.message); }
+  const byKey = {};
+  planificaciones.forEach((pl) => { byKey[pl.productoId] = pl; });
+  const items = products
+    .filter((p) => !p.ultimaDeduccion || p.ultimaDeduccion < tomorrow)
+    .map((p) => {
+      const pl = byKey[p.id];
+      const total = pl ? (pl.desayuno || 0) + (pl.comida || 0) + (pl.extra || 0) : 0;
+      return total > 0 ? { p, total } : null;
+    })
+    .filter(Boolean);
+  if (!items.length) { container.hidden = true; return 0; }
+  container.hidden = false;
+  body.innerHTML = items.map(({ p, total }) => `
+    <div class="confirm-item">
+      <div class="confirm-line"><strong>${escapeHtml(p.nombre)}</strong><span>${total} ${escapeHtml(p.unidad || "uds.")} · mañana</span></div>
+      <div class="confirm-actions">
+        <button class="secondary confirm-btn" data-prod="${p.id}" data-fecha="${tomorrow}" data-total="${total}">Confirmar</button>
+        <button class="secondary modify-btn" data-prod="${p.id}" data-fecha="${tomorrow}" data-total="${total}">Modificar</button>
+      </div>
+      <div class="confirm-edit" hidden>
+        <input type="number" min="0" class="confirm-input" value="${total}" aria-label="Nueva cantidad para mañana" />
+        <button class="secondary ok-btn">OK</button>
+      </div>
+    </div>
+  `).join("");
+  body.querySelectorAll(".confirm-btn").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const { prod: productoId, fecha, total } = btn.dataset;
+      btn.disabled = true;
+      try {
+        await confirmarConsumo({ productoId, fecha, cantidad: Number(total) });
+        toast("Consumo de mañana confirmado y descontado", "success");
+        loadWithState(document.getElementById("page-status"), load);
+      } catch (err) { toast("Error: " + err.message, "error"); btn.disabled = false; }
+    });
+  });
+  body.querySelectorAll(".modify-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const item = btn.closest(".confirm-item");
+      const edit = item.querySelector(".confirm-edit");
+      edit.hidden = false;
+      btn.hidden = true;
+      edit.querySelector(".confirm-input").focus();
+    });
+  });
+  body.querySelectorAll(".ok-btn").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const item = btn.closest(".confirm-item");
+      const productoId = item.querySelector(".confirm-btn").dataset.prod;
+      const fecha = item.querySelector(".confirm-btn").dataset.fecha;
+      const cantidad = Number(item.querySelector(".confirm-input").value);
+      if (cantidad < 0) { toast("Cantidad inválida", "error"); return; }
+      btn.disabled = true;
+      try {
+        await confirmarConsumo({ productoId, fecha, cantidad });
+        toast("Consumo de mañana modificado y descontado", "success");
+        loadWithState(document.getElementById("page-status"), load);
+      } catch (err) { toast("Error: " + err.message, "error"); btn.disabled = false; }
+    });
+  });
+  return items.length;
+}
+
 async function load() {
   // Descuenta automáticamente la planificación de cada día (si aún no se ha hecho).
   let settle = null;
@@ -98,8 +173,10 @@ async function load() {
     renderAmasadorasInto(document.getElementById("amasadoras-list"), pendientes, now, { onConfirm: handleConfirm, onCancel: handleCancel, onDelete: handleDelete });
   }
 
+  const pendingConfirmaciones = await renderConfirmacion();
+
   const focus = document.getElementById("dashboard-focus");
-  if (!alerts.length && !pendientes.length) {
+  if (!alerts.length && !pendientes.length && !pendingConfirmaciones) {
     focus.hidden = false;
     focus.innerHTML = `<div class="empty-state-ok"><span class="empty-state-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><div><strong>Todo en orden</strong><p>No hay productos bajo mínimos, ni faltan existencias para mañana ni producciones pendientes.</p></div></div>`;
   } else { focus.hidden = true; }

@@ -15,7 +15,15 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
+      - name: Comprobar secreto FIREBASE_SERVICE_ACCOUNT
+        env:
+          SA: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          if [ -z "$SA" ]; then
+            echo "::error::El secreto FIREBASE_SERVICE_ACCOUNT no está configurado. Añádelo en Settings → Secrets and variables → Actions del repo."
+            exit 1
+          fi
       - name: Instalar dependencias
         run: npm install --prefix .github/scripts
       - name: Escribir credenciales de servicio (secreto)

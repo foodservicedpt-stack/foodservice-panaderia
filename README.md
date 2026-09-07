@@ -36,20 +36,30 @@ La cobertura indica cuántos días durará el stock actual de un producto:
 - Si el producto no tiene consumo diario definido (0), la app muestra "Sin datos" en lugar de dar una alarma falsa.
 - En Inventario y en el Inicio se muestra el ritmo usado (ej. "a 50/día") junto a los días, para que siempre sepas con qué dato se calcula.
 
-## Deducción diaria automática
+## Deducción del día y confirmación del consumo
 
 El stock se actualiza automáticamente al abrir la app (Inicio o Inventario): se descuenta de
-cada producto de tipo STOCK activo la cantidad **total planificada** (desayuno + comida +
-extra) de **cada día ya pasado**.
+cada producto de tipo STOCK activo la cantidad **total planificada** (desayuno + comida + extra)
+de **cada día hasta hoy inclusive**. Así, el stock ya no cuenta el consumo de **hoy** como
+disponible.
 
-- Se descuenta por día ya transcurrido: la planificación de **hoy** queda como previsión y se
-  descuenta cuando se abre la app al día siguiente, para no contar el mismo consumo dos veces.
-- Es **idempotente**: cada producto guarda `ultimaDeduccion` (el último día descontado) y aunque
-  se abra la app varias veces en el mismo día no vuelve a descontar nada.
-- Si la app se abre varios días después, se pone al día descontando los días intermedios en los
-  que hubo planificación.
+- **Idempotente**: cada producto guarda `ultimaDeduccion` (el último día descontado) y aunque se
+  abra la app varias veces el mismo día no vuelve a descontar nada.
+- Si la app se abre varios días después, se pone al día descontando los días intermedios que
+  tenían planificación.
 - No deja el stock en negativo: descuenta como máximo lo disponible.
 - Cada descuento queda registrado en movimientos con tipo **Consumo**.
+
+### Confirmar el consumo de mañana
+
+En el **Inicio** aparece un aviso para **confirmar la planificación de mañana**. La idea: el pan
+de mañana ya cuenta como montado, así que se descuenta del stock ahora.
+
+- **Confirmar**: descuenta la cantidad planificada para mañana en ese mismo momento.
+- **Modificar → OK**: cambias la cantidad y se descuenta la nueva cantidad.
+- Si no tocas nada, se descuenta automáticamente la cantidad establecida al llegar el día
+  (la liquidación diaria lo aplica como recordatorio de seguridad).
+- La notificación de las 06:30 (GitHub Actions) te recuerda **confirmar el plan de mañana**.
 
 ## Rendimiento
 

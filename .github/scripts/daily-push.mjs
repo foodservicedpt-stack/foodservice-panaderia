@@ -29,16 +29,23 @@ function madridParts() {
 
 function todayStr() { return madridParts().date; }
 
+function addDays(dateStr, n) {
+  const d = new Date(dateStr + "T12:00:00");
+  d.setDate(d.getDate() + n);
+  return d.toISOString().slice(0, 10);
+}
+
 async function getTokens() {
   const snap = await db.collection("pushSubscriptions").where("enabled", "==", true).get();
   return snap.docs.map((d) => d.data().token).filter(Boolean);
 }
 
 async function buildSummary() {
-  const today = todayStr();
+  // El aviso es para CONFIRMAR el plan de mañana (no el de hoy).
+  const target = addDays(todayStr(), 1);
   const [prodsSnap, planSnap] = await Promise.all([
     db.collection("productos").where("categoria", "==", "STOCK").get(),
-    db.collection("planificacion").where("fecha", "==", today).get(),
+    db.collection("planificacion").where("fecha", "==", target).get(),
   ]);
   const planByProduct = {};
   planSnap.forEach((d) => { const p = d.data(); planByProduct[p.productoId] = p; });
@@ -51,25 +58,25 @@ async function buildSummary() {
     const planTotal = plan
       ? (Number(plan.desayuno) || 0) + (Number(plan.comida) || 0) + (Number(plan.extra) || 0)
       : 0;
+    const consumer = planTotal > 0 ? planTotal : Number(p.consumoDiarioDefecto) || 0;
     const stock = Number(p.stockActual) || 0;
     const unidad = p.unidad || "uds.";
     if (planTotal > 0) planned.push({ nombre: p.nombre, total: planTotal, unidad });
-    const consumoHoy = planTotal > 0 ? planTotal : Number(p.consumoDiarioDefecto) || 0;
-    if (consumoHoy > 0 && stock < consumoHoy) belowMin.push(p.nombre);
+    if (consumer > 0 && stock < consumer) belowMin.push(p.nombre);
   });
   let title;
   let body;
   if (planned.length) {
     const first = planned.slice(0, 3).map((p) => `${p.nombre} (${p.total} ${p.unidad})`).join(", ");
-    title = "Plan de hoy";
+    title = "Confirma el plan de mañana";
     body = planned.length > 3 ? `${first} y ${planned.length - 3} más.` : first;
-    if (belowMin.length) body += ` · Sin stock para: ${belowMin.slice(0, 3).join(", ")}`;
+    if (belowMin.length) body += ` · Sin stock: ${belowMin.slice(0, 3).join(", ")}`;
   } else if (belowMin.length) {
-    title = "Stock bajo hoy";
+    title = "Stock bajo mañana";
     body = `Sin existencias para: ${belowMin.slice(0, 3).join(", ")}`;
   } else {
     title = "Recordatorio del obrador";
-    body = "Hoy no hay producción planificada. Revisa la planificación y el stock.";
+    body = "No hay planificación para mañana. Revisa la planificación y el stock.";
   }
   return { title, body };
 }

@@ -887,3 +887,24 @@ th {
 ::-webkit-scrollbar-thumb { background: var(--separator-strong); border-radius: var(--radius-full); border: 2px solid transparent; background-clip: content-box; }
 ::-webkit-scrollbar-thumb:hover { background: var(--text-tertiary); background-clip: content-box; }
 ::selection { background: var(--tint-soft-strong); color: var(--text-primary); }
+
+/* ===================== CONFIRMACIÓN DE CONSUMO ===================== */
+.confirm-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--separator);
+}
+.confirm-item:last-child { border-bottom: none; }
+.confirm-line {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.75rem;
+}
+.confirm-line span { color: var(--text-secondary); font-size: 0.875rem; }
+.confirm-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.confirm-actions button { min-width: 7rem; }
+.confirm-edit { display: flex; gap: 0.5rem; align-items: center; }
+.confirm-edit .confirm-input { max-width: 8rem; }

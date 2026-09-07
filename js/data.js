@@ -284,19 +284,17 @@ export async function saveNota({ fecha, nota }) {
 export async function processDailyConsumption(todayStr = toDateString(new Date())) {
   const today = typeof todayStr === "string" ? parseDateString(todayStr) : todayStr;
   const todayDate = toDateString(today);
-  const yesterday = addCalendarDays(today, -1);
-  const yesterdayStr = toDateString(yesterday);
-  const endMs = yesterday.getTime();
+  const endMs = today.getTime();
   const products = await getProductosStock();
   if (!products.length) return { appliedDays: 0, appliedUnits: 0, deductions: [] };
 
-  // Si todos los productos ya están liquidados hasta ayer, no hay nada que hacer:
+  // Si todos los productos ya están liquidados hasta hoy, no hay nada que hacer:
   // evitamos consultar la planificación y, sobre todo, las transacciones.
-  const needsSettlement = products.some((p) => !p.ultimaDeduccion || p.ultimaDeduccion < yesterdayStr);
+  const needsSettlement = products.some((p) => !p.ultimaDeduccion || p.ultimaDeduccion < todayDate);
   if (!needsSettlement) return { appliedDays: 0, appliedUnits: 0, deductions: [] };
 
   // Rango de planificación a consultar: desde el día siguiente a la última deducción
-  // del producto más atrasado hasta ayer.
+  // del producto más atrasado hasta hoy.
   let minFromMs = endMs;
   for (const p of products) {
     if (!p.ultimaDeduccion) continue;
@@ -306,7 +304,7 @@ export async function processDailyConsumption(todayStr = toDateString(new Date()
   const minFromStr = toDateString(new Date(minFromMs));
 
   const planSnap = await getDocs(
-    query(collection(db, "planificacion"), where("fecha", ">=", minFromStr), where("fecha", "<=", yesterdayStr))
+    query(collection(db, "planificacion"), where("fecha", ">=", minFromStr), where("fecha", "<=", todayDate))
   );
   const planByKey = {};
   planSnap.docs.forEach((d) => {
@@ -325,8 +323,8 @@ export async function processDailyConsumption(todayStr = toDateString(new Date()
   let changed = false;
   for (const p of products) {
     const items = byProduct[p.id] || [];
-    // Si ya está liquidado hasta ayer (o más adelante), no hace falta tocarlo.
-    if (p.ultimaDeduccion && p.ultimaDeduccion >= yesterdayStr) continue;
+    // Si ya está liquidado hasta hoy (o más adelante), no hace falta tocarlo.
+    if (p.ultimaDeduccion && p.ultimaDeduccion >= todayDate) continue;
     const ref = doc(db, "productos", p.id);
     try {
       const res = await runTransaction(db, async (transaction) => {
@@ -350,7 +348,7 @@ export async function processDailyConsumption(todayStr = toDateString(new Date()
             });
           }
         }
-        transaction.update(ref, { stockActual: stockFinal, ultimaDeduccion: yesterdayStr });
+        transaction.update(ref, { stockActual: stockFinal, ultimaDeduccion: todayDate });
         return { advanced: true, days: consumos.length, units: consumos.reduce((s, c) => s + c.cantidad, 0) };
       });
       appliedDays += res.days;
@@ -363,4 +361,43 @@ export async function processDailyConsumption(todayStr = toDateString(new Date()
   }
   if (changed) invalidateProductosCache();
   return { appliedDays, appliedUnits, deductions };
+}
+// ---------- Confirmación de consumo (mañana) ----------
+
+/** Descuenta en ese momento la cantidad confirmada/modificada para una fecha (habitualmente
+ *  mañana). El pan de mañana ya cuenta como montado, así que se resta del stock ya.
+ *  - No deja el stock en negativo (consume como máximo lo disponible).
+ *  - No vuelve a descontar si esa fecha (o una posterior) ya fue descontada.
+ *  - Avanza ultimaDeduccion hasta la fecha confirmada para que la liquidación no repita. */
+export async function confirmarConsumo({ productoId, fecha, cantidad }) {
+  if (!productoId || !/^\d{4}-\d{2}-\d{2}$/.test(fecha)) throw new Error("Producto o fecha inválidos");
+  parseDateString(fecha);
+  const qty = Number(cantidad);
+  if (!Number.isInteger(qty) || qty < 0) throw new Error("La cantidad debe ser un número entero no negativo");
+  const fechaMs = parseDateString(fecha).getTime();
+  const productRef = doc(db, "productos", String(productoId));
+  const movementRef = doc(collection(db, "movimientos"));
+  let consumed = 0;
+  await runTransaction(db, async (transaction) => {
+    const snap = await transaction.get(productRef);
+    if (!snap.exists()) throw new Error("Producto no encontrado");
+    const prod = snap.data();
+    const last = prod.ultimaDeduccion ? parseDateString(prod.ultimaDeduccion) : null;
+    // Si esa fecha ya está descontada (o una posterior), no volver a restar.
+    if (last && last.getTime() >= fechaMs) throw new Error("Este consumo ya fue descontado");
+    const currentStock = Number(prod.stockActual) || 0;
+    if (qty === 0) {
+      // Cantidad 0: solo avanzar la marca de descontado (no hay consumo que registrar).
+      transaction.update(productRef, { ultimaDeduccion: fecha });
+      return;
+    }
+    consumed = Math.min(qty, Math.max(0, currentStock));
+    transaction.update(productRef, { stockActual: currentStock - consumed, ultimaDeduccion: fecha });
+    transaction.set(movementRef, {
+      productoId: String(productoId), fecha, cantidad: -consumed, tipo: "CONSUMO",
+      notas: `Consumo confirmado ${fecha}`, createdAt: new Date().toISOString(),
+    });
+  });
+  invalidateProductosCache();
+  return { consumed, fecha };
 }

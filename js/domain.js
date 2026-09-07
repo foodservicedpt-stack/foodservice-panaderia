@@ -257,7 +257,9 @@ export function forecastStock({ stockActual, consumoDiarioDefecto, planByKey, pr
   let remaining = stock;
   let daysCovered = 0;
   let lastCovered = null;
-  for (let i = 0; i < horizonDays; i++) {
+  // Hoy ya está liquidado/descontado por la deducción diaria, así que la previsión
+  // empieza en el consumo de mañana (i = 1) para no contar el mismo día dos veces.
+  for (let i = 1; i < horizonDays; i++) {
     const date = toDateString(addCalendarDaysLocal(today, i));
     const plan = planByKey[`${productoId}_${date}`];
     let planned = 0;
@@ -299,13 +301,13 @@ function planTotal(plan) {
   return (Number(plan.desayuno) || 0) + (Number(plan.comida) || 0) + (Number(plan.extra) || 0);
 }
 
-/** Deducciones pendientes (producto + fecha + cantidad). Descuenta cada día ya
- *  pasado: desde el día siguiente a la última deducción de cada producto hasta ayer
- *  inclusive (hoy queda como previsión y se descuenta cuando se abra la app mañana).
- *  Solo incluye días con planificación > 0. Es una función pura para testearla en Node. */
+/** Deducciones pendientes (producto + fecha + cantidad). Descuenta desde el día
+ *  siguiente a la última deducción de cada producto hasta hoy inclusive: así el stock
+ *  ya refleja el consumo de hoy (no se cuenta como disponible). Solo incluye días con
+ *  planificación > 0. Es una función pura para testearla en Node. */
 export function pendingDeductions({ products, planByKey, todayStr }) {
   const today = typeof todayStr === "string" ? parseDateString(todayStr) : new Date(todayStr);
-  const endMs = addCalendarDaysLocal(today, -1).getTime();
+  const endMs = today.getTime();
   const out = [];
   for (const p of products || []) {
     if (p.categoria !== "STOCK" || p.activo === false) continue;
