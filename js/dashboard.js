@@ -44,87 +44,48 @@ async function handleDelete(id, btn) {
   finally { isBusy = false; }
 }
 
-async function buildForecastFor(products) {
-  const today = new Date();
-  const start = toDateString(today);
-  const end = toDateString(addCalendarDays(today, 45));
-  const { planificaciones } = await getPlanificacion(start, end);
-  const planByKey = {};
-  planificaciones.forEach((p) => { planByKey[`${p.productoId}_${p.fecha}`] = p; });
+function buildForecastFor(products, planByKey, start) {
   return products.reduce((acc, p) => {
     acc[p.id] = forecastStock({ stockActual: p.stockActual || 0, consumoDiarioDefecto: p.consumoDiarioDefecto || 0, planByKey, productoId: p.id, todayStr: start, horizonDays: 45 });
     return acc;
   }, {});
 }
 
-async function renderConfirmacion() {
+function renderConfirmacion(products, planByKey, todayStr) {
   const container = document.getElementById("confirm-card");
   const body = document.getElementById("confirm-body");
   if (!container || !body) return 0;
-  const tomorrow = toDateString(addCalendarDays(new Date(), 1));
-  let planificaciones = [];
-  let products = [];
-  try {
-    const res = await getPlanificacion(tomorrow, tomorrow);
-    planificaciones = res.planificaciones;
-    products = res.products;
-  } catch (err) { console.warn("[confirm]", err.message); }
-  const byKey = {};
-  planificaciones.forEach((pl) => { byKey[pl.productoId] = pl; });
-  const items = products
+  const tomorrow = toDateString(addCalendarDays(todayStr, 1));
+  const items = (products || [])
     .filter((p) => !p.ultimaDeduccion || p.ultimaDeduccion < tomorrow)
     .map((p) => {
-      const pl = byKey[p.id];
+      const pl = planByKey[`${p.id}_${tomorrow}`];
       const total = pl ? (pl.desayuno || 0) + (pl.comida || 0) + (pl.extra || 0) : 0;
       return total > 0 ? { p, total } : null;
     })
     .filter(Boolean);
   if (!items.length) { container.hidden = true; return 0; }
   container.hidden = false;
+  // Un único botón "Confirmar" por producto; la cantidad se puede ajustar en el propio input.
   body.innerHTML = items.map(({ p, total }) => `
     <div class="confirm-item">
-      <div class="confirm-line"><strong>${escapeHtml(p.nombre)}</strong><span>${total} ${escapeHtml(p.unidad || "uds.")} · mañana</span></div>
-      <div class="confirm-actions">
-        <button class="secondary confirm-btn" data-prod="${p.id}" data-fecha="${tomorrow}" data-total="${total}">Confirmar</button>
-        <button class="secondary modify-btn" data-prod="${p.id}" data-fecha="${tomorrow}" data-total="${total}">Modificar</button>
-      </div>
-      <div class="confirm-edit" hidden>
-        <input type="number" min="0" class="confirm-input" value="${total}" aria-label="Nueva cantidad para mañana" />
-        <button class="secondary ok-btn">OK</button>
+      <div class="confirm-line"><strong>${escapeHtml(p.nombre)}</strong><span>para mañana</span></div>
+      <div class="confirm-row">
+        <input type="number" min="0" class="confirm-input" value="${total}" aria-label="Cantidad para mañana de ${escapeHtml(p.nombre)}" />
+        <span class="confirm-unit">${escapeHtml(p.unidad || "uds.")}</span>
+        <button class="secondary confirm-btn" data-prod="${p.id}" data-fecha="${tomorrow}">Confirmar</button>
       </div>
     </div>
   `).join("");
   body.querySelectorAll(".confirm-btn").forEach((btn) => {
     btn.addEventListener("click", async () => {
-      const { prod: productoId, fecha, total } = btn.dataset;
-      btn.disabled = true;
-      try {
-        await confirmarConsumo({ productoId, fecha, cantidad: Number(total) });
-        toast("Consumo de mañana confirmado y descontado", "success");
-        loadWithState(document.getElementById("page-status"), load);
-      } catch (err) { toast("Error: " + err.message, "error"); btn.disabled = false; }
-    });
-  });
-  body.querySelectorAll(".modify-btn").forEach((btn) => {
-    btn.addEventListener("click", () => {
       const item = btn.closest(".confirm-item");
-      const edit = item.querySelector(".confirm-edit");
-      edit.hidden = false;
-      btn.hidden = true;
-      edit.querySelector(".confirm-input").focus();
-    });
-  });
-  body.querySelectorAll(".ok-btn").forEach((btn) => {
-    btn.addEventListener("click", async () => {
-      const item = btn.closest(".confirm-item");
-      const productoId = item.querySelector(".confirm-btn").dataset.prod;
-      const fecha = item.querySelector(".confirm-btn").dataset.fecha;
       const cantidad = Number(item.querySelector(".confirm-input").value);
       if (cantidad < 0) { toast("Cantidad inválida", "error"); return; }
       btn.disabled = true;
       try {
-        await confirmarConsumo({ productoId, fecha, cantidad });
-        toast("Consumo de mañana modificado y descontado", "success");
+        await confirmarConsumo({ productoId: btn.dataset.prod, fecha: btn.dataset.fecha, cantidad });
+        toast("Consumo de mañana confirmado y descontado", "success");
         loadWithState(document.getElementById("page-status"), load);
       } catch (err) { toast("Error: " + err.message, "error"); btn.disabled = false; }
     });
@@ -140,7 +101,13 @@ async function load() {
     toast(settle.appliedDays === 1 ? "Se descontó el consumo planificado de ayer." : `Se descontó el consumo planificado de ${settle.appliedDays} días.`, "info", { title: "Stock actualizado" });
   }
   const [products, amasadoras] = await Promise.all([getProductosStock(), getAmasadoras()]);
-  const forecast = await buildForecastFor(products);
+  const todayD = new Date();
+  const start = toDateString(todayD);
+  const end = toDateString(addCalendarDays(todayD, 45));
+  const { planificaciones } = await getPlanificacion(start, end);
+  const planByKey = {};
+  planificaciones.forEach((p) => { planByKey[`${p.productoId}_${p.fecha}`] = p; });
+  const forecast = buildForecastFor(products, planByKey, start);
   const withStatus = products.map((p) => {
     const coverageDays = calcCoverageDays(p.stockActual || 0, [], p.consumoDiarioDefecto || 0);
     const status = getStockStatus(coverageDays, p.margenSeguridadDias || 0);
@@ -173,7 +140,7 @@ async function load() {
     renderAmasadorasInto(document.getElementById("amasadoras-list"), pendientes, now, { onConfirm: handleConfirm, onCancel: handleCancel, onDelete: handleDelete });
   }
 
-  const pendingConfirmaciones = await renderConfirmacion();
+  const pendingConfirmaciones = renderConfirmacion(products, planByKey, start);
 
   const focus = document.getElementById("dashboard-focus");
   if (!alerts.length && !pendientes.length && !pendingConfirmaciones) {

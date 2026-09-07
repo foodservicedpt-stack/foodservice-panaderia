@@ -1,4 +1,4 @@
-const CACHE_NAME = "panaderia-v2";
+const CACHE_NAME = "panaderia-v3";
 const CORE = [
   "./",
   "./index.html",
@@ -75,14 +75,20 @@ self.addEventListener("fetch", (event) => {
   }
 
   if (request.mode === "navigate") {
+    // Navegación rápida: sirve el HTML cacheado al instante y refresca en segundo plano.
     event.respondWith(
-      fetch(request)
-        .then((response) => {
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
-          return response;
-        })
-        .catch(() => caches.match(request).then((c) => c || caches.match("./index.html")))
+      caches.match(request).then((cached) => {
+        const network = fetch(request)
+          .then((response) => {
+            if (response && response.status === 200) {
+              const clone = response.clone();
+              caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
+            }
+            return response;
+          })
+          .catch(() => cached);
+        return cached || network;
+      }).catch(() => caches.match("./index.html"))
     );
     return;
   }
