@@ -19,7 +19,7 @@ export function renderNav(current) {
   header.className = "app-header";
   header.innerHTML = `
     <a class="brand" href="dashboard.html" aria-label="Panadería — Inicio">
-      <span class="brand-mark">${icon("wheat")}</span>
+      <img class="brand-mark-img" src="icons/icon-192.png" alt="" width="30" height="30" />
       <h1>Panadería</h1>
     </a>
     <nav class="app-nav" aria-label="Navegación principal">

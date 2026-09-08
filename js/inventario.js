@@ -37,7 +37,8 @@ async function buildForecast(products) {
 }
 
 function productCard(p, fore) {
-  const coverageDays = calcCoverageDays(p.stockActual || 0, [], p.consumoDiarioDefecto || 0);
+  // Cobertura plan-driven: días que dura el stock según el consumo previsto en Planificación.
+  const coverageDays = fore && fore.lastCovered ? fore.daysCovered : null;
   const status = stockStatusFromForecast(fore, p.margenSeguridadDias || 0);
   const rate = p.consumoDiarioDefecto || 0;
   const unidad = escapeHtml(p.unidad || "uds.");

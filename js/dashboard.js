@@ -3,7 +3,7 @@ import { getProductosStock, getAmasadoras, confirmarAmasadora, cancelarProduccio
 import { getGreeting, calcCoverageDays, getStockStatus, formatCoverageDays, formatDateES, toDateString, addCalendarDays } from "./utils.js";
 import { escapeHtml, loadWithState, toast } from "./ui.js";
 import { renderAmasadorasInto } from "./amasadoras-ui.js";
-import { forecastStock, isProduccionVisible, produccionTipo, stockStatusFromForecast } from "./domain.js";
+import { forecastStock, isProduccionVisible, produccionTipo, stockStatusFromForecast, getProduccionLifecycle } from "./domain.js";
 
 renderNav("dashboard.html");
 
@@ -109,8 +109,9 @@ async function load() {
   planificaciones.forEach((p) => { planByKey[`${p.productoId}_${p.fecha}`] = p; });
   const forecast = buildForecastFor(products, planByKey, start);
   const withStatus = products.map((p) => {
-    const coverageDays = calcCoverageDays(p.stockActual || 0, [], p.consumoDiarioDefecto || 0);
-    const status = stockStatusFromForecast(forecast[p.id], p.margenSeguridadDias || 0);
+    const f = forecast[p.id];
+    const coverageDays = f && f.lastCovered ? f.daysCovered : null;
+    const status = stockStatusFromForecast(f, p.margenSeguridadDias || 0);
     return { ...p, coverageDays, status, forecast: forecast[p.id] };
   });
   const alerts = withStatus.filter((p) => p.status === "danger" || (p.forecast && p.forecast.shortTomorrow));
@@ -133,7 +134,8 @@ async function load() {
   }
 
   const now = new Date();
-  const pendientes = amasadoras.filter((a) => a.estado !== "COMPLETADA" && isProduccionVisible(a, produccionTipo(a.tipo || "MASAS"), now));
+  // En Inicio solo amasadoras YA iniciadas y no finalizadas/expiradas (fuente única: ciclo de vida).
+  const pendientes = amasadoras.filter((a) => { const lc = getProduccionLifecycle(a, now); return lc.active && lc.started; });
   cachedPendientes = pendientes;
   if (pendientes.length) {
     document.getElementById("amasadoras-card").hidden = false;

@@ -270,6 +270,15 @@ export function productionStartLabel(produccion) {
   return "00:00";
 }
 
+/** Momento (ms) en que empieza la producción, en hora local. Si se guardó horaInicio se usa esa
+ *  hora del día de producción; si no, la producción empieza a las 00:00 de ese día. */
+export function productionStartMs(produccion) {
+  const { y0 } = productionDayInfo(produccion);
+  const h = produccion.horaInicio && /^(\d{2}):(\d{2})$/.exec(produccion.horaInicio);
+  if (h) return y0 + (Number(h[1]) * 60 + Number(h[2])) * 60000;
+  return y0;
+}
+
 /** Ciclo de vida de una producción según el momento. Única fuente de verdad para:
  *  - si está activa / finalizada / cancelada / confirmada
  *  - si está en su segundo día
@@ -289,10 +298,11 @@ export function getProduccionLifecycle(produccion, now = new Date()) {
   const finished = confirmed || cancelled || finishedByTime;
   const active = !finished && visible;
   const isSecondDay = t >= day2Start;
-  const started = t >= y0;
+  const startMs = productionStartMs(produccion);
+  const started = t >= startMs;
   const stage = getProduccionStage(produccion, now);
   return {
-    tipo, def, fechaInicio, y0, day2Start, completeAt,
+    tipo, def, fechaInicio, y0, day2Start, completeAt, startMs,
     confirmed, cancelled, finishedByTime, finished, visible, active,
     isSecondDay, started, stage,
     startLabel: started ? "Iniciada" : "Inicia",
@@ -321,6 +331,27 @@ export function groupProductionsByDay(amasadoras) {
   });
 }
 
+
+// ---------- Planificación por defecto (base de cada semana) ----------
+
+// Valores iniciales por producto y día de la semana (índice 0=lunes ... 6=domingo).
+export const DEFAULT_PLAN = Object.freeze([
+  { producto: "hogazas blancas", dias: [0, 1, 2, 3, 4], cantidad: 24 },
+  { producto: "hogazas integrales", dias: [0, 1, 2, 3, 4], cantidad: 3 },
+  { producto: "bollitos blancos", dias: [0, 1, 2, 3, 4], cantidad: 50 },
+  { producto: "barras blancas", dias: [4, 5, 6], cantidad: 50 },
+]);
+
+function normalizeName(s) { return String(s || "").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""); }
+
+/** Cantidad por defecto para (producto, día de la semana) o null si no aplica. */
+export function defaultPlanAmount(productName, weekdayIndex) {
+  const n = normalizeName(productName);
+  for (const d of DEFAULT_PLAN) {
+    if (n === d.producto && d.dias.includes(weekdayIndex)) return d.cantidad;
+  }
+  return null;
+}
 
 // ---------- Previsión de stock a partir de la planificación ----------
 function addCalendarDaysLocal(date, n) {

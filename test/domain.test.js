@@ -89,7 +89,7 @@ test("valida la unidad del producto", () => {
   assert.throws(() => validateProductInput({ nombre: "Pan", unidad: "x".repeat(13) }), /unidad/);
 });
 
-import { produccionStages, getProduccionStage, isProduccionVisible, produccionTipo, forecastStock, pendingDeductions, applyConsumptionToStock, getProduccionLifecycle, productionDayInfo, groupProductionsByDay, stockStatusFromForecast } from "../js/domain.js";
+import { produccionStages, getProduccionStage, isProduccionVisible, produccionTipo, forecastStock, pendingDeductions, applyConsumptionToStock, getProduccionLifecycle, productionDayInfo, productionStartMs, groupProductionsByDay, stockStatusFromForecast, defaultPlanAmount, DEFAULT_PLAN } from "../js/domain.js";
 
 test("etapas y horarios de cada tipo de producción", () => {
   assert.equal(produccionStages("MASAS", "2026-09-20", "2026-09-15T10:00:00.000Z").length, 4);
@@ -238,4 +238,54 @@ test("estado de stock según la previsión de planificación", () => {
   assert.equal(stockStatusFromForecast({ empty: false, shortTomorrow: true, daysCovered: 0 }, 2), "danger");
   assert.equal(stockStatusFromForecast({ empty: false, shortTomorrow: false, daysCovered: 1 }, 2), "danger");
   assert.equal(stockStatusFromForecast({ empty: false, shortTomorrow: false, daysCovered: 0 }, 2), "ok");
+});
+
+test("inicio: solo amasadoras iniciadas y no expiradas (fuente: ciclo de vida)", () => {
+  // Futura (mañana) -> no iniciada -> NO aparece en Inicio.
+  const futura = { id: "f", tipo: "MASAS", fechaInicio: "2026-09-21", piezasProducidas: null, estado: "PLANIFICADA" };
+  const lcF = getProduccionLifecycle(futura, new Date(2026, 8, 20, 10, 0));
+  assert.equal(lcF.started, false);
+  assert.equal(lcF.active && lcF.started, false);
+  // Iniciada hoy a las 09:00 -> aparece.
+  const iniciada = { id: "i", tipo: "MASAS", fechaInicio: "2026-09-20", horaInicio: "09:00", piezasProducidas: null, estado: "PLANIFICADA" };
+  const lcI = getProduccionLifecycle(iniciada, new Date(2026, 8, 20, 10, 0));
+  assert.equal(lcI.started, true);
+  assert.equal(lcI.active && lcI.started, true);
+  // Completada (piezas) -> no aparece.
+  const comp = { id: "c", tipo: "MASAS", fechaInicio: "2026-09-20", piezasProducidas: 100, estado: "COMPLETADA" };
+  const lcC = getProduccionLifecycle(comp, new Date(2026, 8, 20, 10, 0));
+  assert.equal(lcC.active, false);
+});
+
+test("inicio: bizcocho expirado a las 16:30 del segundo día no aparece", () => {
+  const b = { id: "b", tipo: "BIZCOCHO", fechaInicio: "2026-09-20", piezasProducidas: null, estado: "PLANIFICADA", createdAt: "2026-09-10T10:00:00.000Z" };
+  // Escenario C: segundo día 16:29 -> activo.
+  const c = getProduccionLifecycle(b, new Date(2026, 8, 21, 16, 29));
+  assert.equal(c.active, true);
+  assert.equal(c.started, true);
+  // Escenario D: 16:30 -> finalizado.
+  const d = getProduccionLifecycle(b, new Date(2026, 8, 21, 16, 30));
+  assert.equal(d.finished, true);
+  assert.equal(d.active, false);
+  // Escenario E: 17:00 -> no activo (historial).
+  const e = getProduccionLifecycle(b, new Date(2026, 8, 21, 17, 0));
+  assert.equal(e.active, false);
+});
+
+test("inicio por hora: horaInicio determina cuándo se inicia", () => {
+  const a = { id: "a", tipo: "MASAS", fechaInicio: "2026-09-20", horaInicio: "10:00", piezasProducidas: null };
+  const start = productionStartMs(a);
+  assert.equal(new Date(start).getHours(), 10);
+  assert.equal(getProduccionLifecycle(a, new Date(2026, 8, 20, 10, 1)).started, true);
+  assert.equal(getProduccionLifecycle(a, new Date(2026, 8, 20, 9, 59)).started, false);
+});
+
+test("valores por defecto por producto y día de la semana", () => {
+  assert.equal(DEFAULT_PLAN.length, 4);
+  assert.equal(defaultPlanAmount("Hogazas blancas", 0), 24);
+  assert.equal(defaultPlanAmount("hogazas integrales", 4), 3);
+  assert.equal(defaultPlanAmount("Bollitos blancos", 5), null);
+  assert.equal(defaultPlanAmount("Barras blancas", 4), 50);
+  assert.equal(defaultPlanAmount("Barras blancas", 6), 50);
+  assert.equal(defaultPlanAmount("Otra cosa", 0), null);
 });
