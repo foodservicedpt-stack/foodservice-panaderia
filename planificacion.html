@@ -21,17 +21,36 @@
     <div id="page-status" class="page-status" role="status" aria-live="polite"></div>
     <section class="page-section">
       <h2>Planificación</h2>
-      <div class="plan-head">
-        <div class="plan-nav">
-          <button class="icon-btn" id="prev-month" aria-label="Mes anterior">‹</button>
-          <strong id="month-label"></strong>
-          <button class="icon-btn" id="next-month" aria-label="Mes siguiente">›</button>
+
+      <!-- NIVEL 1: VISTA SEMANAL / MENSUAL -->
+      <div id="plan-overview">
+        <div class="plan-head">
+          <div class="plan-nav">
+            <button class="icon-btn" id="prev-week" aria-label="Semana anterior">‹</button>
+            <strong id="week-label"></strong>
+            <button class="icon-btn" id="next-week" aria-label="Semana siguiente">›</button>
+          </div>
+          <button class="today-btn secondary" id="today-btn">Hoy</button>
         </div>
-        <button class="today-btn secondary" id="today-btn">Hoy</button>
+        <div class="plan-day-strip" id="plan-day-strip" aria-label="Días de la semana"></div>
+        <div class="cal-month" id="cal-month" aria-label="Calendario mensual"></div>
+        <div class="cal-week" id="cal-week" aria-label="Vista semanal"></div>
       </div>
-      <div class="cal-month" id="cal-month" aria-label="Calendario mensual"></div>
-      <div class="cal-week" id="cal-week" aria-label="Vista semanal"></div>
-      <div class="cal-day-detail" id="cal-day-detail"></div>
+
+      <!-- NIVEL 2: DETALLE DEL DÍA -->
+      <div id="plan-detail" class="plan-detail" hidden>
+        <div class="plan-detail-head">
+          <button id="detail-back" class="ghost">‹ Volver</button>
+          <div class="plan-detail-days">
+            <button id="detail-prev" class="icon-btn" aria-label="Día anterior">‹</button>
+            <strong id="detail-date"></strong>
+            <button id="detail-next" class="icon-btn" aria-label="Día siguiente">›</button>
+          </div>
+        </div>
+        <div class="cal-detail-section"><h5>Panes de consumo</h5><div id="detail-panes"></div></div>
+        <div class="cal-detail-section"><h5>Otras producciones del día</h5><div id="detail-productions"></div></div>
+        <a href="amasadoras.html" class="add-elaboration">＋ Añadir elaboración</a>
+      </div>
     </section>
   </main>
 
