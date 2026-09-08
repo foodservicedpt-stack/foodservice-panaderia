@@ -55,11 +55,6 @@ export function addCalendarDays(date, days) {
   return d;
 }
 
-export function dayAbbr(dayIndex) {
-  const days = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
-  return days[dayIndex] ?? "";
-}
-
 export function dayFull(dayIndex) {
   const days = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
   return days[dayIndex] ?? "";
