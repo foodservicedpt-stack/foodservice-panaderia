@@ -3,7 +3,7 @@ import { getProductosStock, getAmasadoras, confirmarAmasadora, cancelarProduccio
 import { getGreeting, calcCoverageDays, getStockStatus, formatCoverageDays, formatDateES, toDateString, addCalendarDays } from "./utils.js";
 import { escapeHtml, loadWithState, toast } from "./ui.js";
 import { renderAmasadorasInto } from "./amasadoras-ui.js";
-import { forecastStock, isProduccionVisible, produccionTipo } from "./domain.js";
+import { forecastStock, isProduccionVisible, produccionTipo, stockStatusFromForecast } from "./domain.js";
 
 renderNav("dashboard.html");
 
@@ -110,7 +110,7 @@ async function load() {
   const forecast = buildForecastFor(products, planByKey, start);
   const withStatus = products.map((p) => {
     const coverageDays = calcCoverageDays(p.stockActual || 0, [], p.consumoDiarioDefecto || 0);
-    const status = getStockStatus(coverageDays, p.margenSeguridadDias || 0);
+    const status = stockStatusFromForecast(forecast[p.id], p.margenSeguridadDias || 0);
     return { ...p, coverageDays, status, forecast: forecast[p.id] };
   });
   const alerts = withStatus.filter((p) => p.status === "danger" || (p.forecast && p.forecast.shortTomorrow));

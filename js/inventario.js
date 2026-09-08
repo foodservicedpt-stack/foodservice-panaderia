@@ -3,7 +3,7 @@ import { getInventario, addMovimiento, getPlanificacion, processDailyConsumption
 import { calcCoverageDays, getStockStatus, formatCoverageDays, formatDateES, toDateString, addCalendarDays } from "./utils.js";
 import { escapeHtml, loadWithState, toast } from "./ui.js";
 import { quantityInput } from "./components.js";
-import { forecastStock } from "./domain.js";
+import { forecastStock, stockStatusFromForecast } from "./domain.js";
 
 renderNav("inventario.html");
 
@@ -38,7 +38,7 @@ async function buildForecast(products) {
 
 function productCard(p, fore) {
   const coverageDays = calcCoverageDays(p.stockActual || 0, [], p.consumoDiarioDefecto || 0);
-  const status = getStockStatus(coverageDays, p.margenSeguridadDias || 0);
+  const status = stockStatusFromForecast(fore, p.margenSeguridadDias || 0);
   const rate = p.consumoDiarioDefecto || 0;
   const unidad = escapeHtml(p.unidad || "uds.");
   const rateLabel = rate > 0 ? `a ${rate}/día` : "";

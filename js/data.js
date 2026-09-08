@@ -231,48 +231,7 @@ export async function eliminarProduccion({ produccionId }) {
   await deleteDoc(doc(db, "amasadoras", String(produccionId)));
 }
 
-// ---------- Orden de trabajo ----------
 
-export async function getOrdenTrabajo(start, end) {
-  const [itemsSnap, notasSnap, planSnap] = await Promise.all([
-    getDocs(query(collection(db, "ordenTrabajo"), where("fecha", ">=", start), where("fecha", "<=", end))),
-    getDocs(query(collection(db, "notas"), where("fecha", ">=", start), where("fecha", "<=", end))),
-    getDocs(query(collection(db, "planificacion"), where("fecha", ">=", start), where("fecha", "<=", end))),
-  ]);
-  const products = (await getProductos()).filter((p) => p.activo !== false);
-  const productosById = Object.fromEntries(products.map((p) => [p.id, p]));
-
-  const items = itemsSnap.docs.map((d) => {
-    const it = { id: d.id, ...d.data() };
-    return { ...it, producto: productosById[it.productoId] };
-  });
-  const notas = notasSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
-  const planificaciones = planSnap.docs.map((d) => {
-    const pl = { id: d.id, ...d.data() };
-    return { ...pl, producto: productosById[pl.productoId] };
-  });
-
-  return { items, notas, products, planificaciones };
-}
-
-export async function toggleOrdenTrabajo({ productoId, fecha, completado }) {
-  if (!productoId || !/^\d{4}-\d{2}-\d{2}$/.test(fecha)) throw new Error("Producto o fecha inválidos");
-  parseDateString(fecha);
-  const id = `${productoId}_${fecha}`;
-  await setDoc(doc(db, "ordenTrabajo", id), { productoId: String(productoId), fecha, completado }, { merge: true });
-}
-
-export async function saveNota({ fecha, nota }) {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(fecha)) throw new Error("Fecha inválida");
-  parseDateString(fecha);
-  if (typeof nota !== "string") throw new Error("La nota debe ser texto");
-  const ref = doc(db, "notas", fecha);
-  if (!nota || !nota.trim()) {
-    await deleteDoc(ref);
-  } else {
-    await setDoc(ref, { fecha, nota });
-  }
-}
 // ---------- Liquidación diaria automática del stock según la planificación ----------
 
 /** Descuenta cada día ya pasado, de forma idempotente, la cantidad planificada.

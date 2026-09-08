@@ -329,23 +329,27 @@ function addCalendarDaysLocal(date, n) {
 
 export function forecastStock({ stockActual, consumoDiarioDefecto, planByKey, productoId, todayStr, horizonDays = 45 }) {
   const stock = Number(stockActual) || 0;
-  const def = Number(consumoDiarioDefecto) || 0;
   const today = typeof todayStr === "string" ? parseDateString(todayStr) : (todayStr || new Date());
 
   let remaining = stock;
   let daysCovered = 0;
   let lastCovered = null;
-  // Hoy ya está liquidado/descontado por la deducción diaria, así que la previsión
-  // empieza en el consumo de mañana (i = 1) para no contar el mismo día dos veces.
+  let totalPlanned = 0;
+  // Previsión plan-driven: se basa en la planificación, no en el consumo promedio.
+  // Hoy ya está liquidado por la deducción diaria; la previsión empieza en mañana (i = 1).
   for (let i = 1; i < horizonDays; i++) {
     const date = toDateString(addCalendarDaysLocal(today, i));
     const plan = planByKey[`${productoId}_${date}`];
     let planned = 0;
     if (plan) planned = (plan.desayuno || 0) + (plan.comida || 0) + (plan.extra || 0);
-    const consumption = planned > 0 ? planned : def;
     if (remaining <= 0) break;
-    if (consumption > 0) { remaining -= consumption; daysCovered++; lastCovered = date; }
-    else { lastCovered = date; daysCovered++; }
+    if (planned > 0) {
+      totalPlanned += planned;
+      remaining = Math.max(0, remaining - planned);
+      daysCovered++;
+      lastCovered = date;
+    }
+    // Días sin planificación no consumen stock y no alargan la cobertura.
   }
 
   const tomorrow = toDateString(addCalendarDaysLocal(today, 1));
@@ -357,12 +361,29 @@ export function forecastStock({ stockActual, consumoDiarioDefecto, planByKey, pr
     lastCovered,
     coversBeyond: lastCovered !== null && remaining > 0,
     daysCovered,
+    totalPlanned,
     projectedTomorrow,
     planTomorrow,
     shortTomorrow: projectedTomorrow < 0,
     empty: stock <= 0,
   };
 }
+
+/** Estado de stock basado en la previsión de PLANIFICACIÓN (no en el consumo promedio).
+ *  - empty / shortTomorrow -> peligro.
+ *  - si hay consumo planificado y la cobertura entra en el margen -> peligro / aviso.
+ *  - sin planificación -> ok (no hay dato que alarme). */
+export function stockStatusFromForecast(forecast, margenDias) {
+  if (!forecast) return "ok";
+  if (forecast.empty) return "danger";
+  if (forecast.shortTomorrow) return "danger";
+  const cov = Number(forecast.daysCovered) || 0;
+  const margen = Number(margenDias) || 0;
+  if (cov > 0 && cov <= margen) return "danger";
+  if (cov > 0 && cov <= margen + 1) return "warning";
+  return "ok";
+}
+
 // ---------- Deducción diaria automática de stock según la planificación ----------
 
 /** Devuelve la fecha siguiente a la última deducción registrada (o hoy si no hay historial). */

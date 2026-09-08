@@ -89,7 +89,7 @@ test("valida la unidad del producto", () => {
   assert.throws(() => validateProductInput({ nombre: "Pan", unidad: "x".repeat(13) }), /unidad/);
 });
 
-import { produccionStages, getProduccionStage, isProduccionVisible, produccionTipo, forecastStock, pendingDeductions, applyConsumptionToStock, getProduccionLifecycle, productionDayInfo, groupProductionsByDay } from "../js/domain.js";
+import { produccionStages, getProduccionStage, isProduccionVisible, produccionTipo, forecastStock, pendingDeductions, applyConsumptionToStock, getProduccionLifecycle, productionDayInfo, groupProductionsByDay, stockStatusFromForecast } from "../js/domain.js";
 
 test("etapas y horarios de cada tipo de producción", () => {
   assert.equal(produccionStages("MASAS", "2026-09-20", "2026-09-15T10:00:00.000Z").length, 4);
@@ -113,9 +113,9 @@ test("previsión de stock desde mañana (hoy ya está descontado)", () => {
     "p1_2026-09-21": { desayuno: 40, comida: 10, extra: 10 },
   };
   const f = forecastStock({ stockActual: 100, consumoDiarioDefecto: 10, planByKey, productoId: "p1", todayStr: "2026-09-20" });
-  // La previsión arranca en mañana (09-21): consume 60 y luego 10/día por defecto.
-  assert.equal(f.daysCovered, 5);
-  assert.equal(f.lastCovered, "2026-09-25");
+  // La previsión arranca en mañana (09-21) y es plan-driven: consume 60 (días sin plan no alargan).
+  assert.equal(f.daysCovered, 1);
+  assert.equal(f.lastCovered, "2026-09-21");
   assert.equal(f.planTomorrow, 60);
   assert.equal(f.projectedTomorrow, 40);
   assert.equal(f.shortTomorrow, false);
@@ -230,4 +230,12 @@ test("agrupa producciones por día y ordena por hora de inicio", () => {
   assert.equal(groups.length, 2);
   assert.equal(groups[0].day, "2026-09-20");
   assert.deepEqual(groups[1].items.map((i) => i.id), ["a", "b"]);
+});
+
+test("estado de stock según la previsión de planificación", () => {
+  assert.equal(stockStatusFromForecast(null, 2), "ok");
+  assert.equal(stockStatusFromForecast({ empty: true, shortTomorrow: false, daysCovered: 0 }, 2), "danger");
+  assert.equal(stockStatusFromForecast({ empty: false, shortTomorrow: true, daysCovered: 0 }, 2), "danger");
+  assert.equal(stockStatusFromForecast({ empty: false, shortTomorrow: false, daysCovered: 1 }, 2), "danger");
+  assert.equal(stockStatusFromForecast({ empty: false, shortTomorrow: false, daysCovered: 0 }, 2), "ok");
 });

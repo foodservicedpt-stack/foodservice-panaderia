@@ -1,4 +1,4 @@
-const CACHE_NAME = "panaderia-v3";
+const CACHE_NAME = "panaderia-v4";
 const CORE = [
   "./",
   "./index.html",
@@ -6,7 +6,6 @@ const CORE = [
   "./inventario.html",
   "./planificacion.html",
   "./amasadoras.html",
-  "./orden-trabajo.html",
   "./configuracion.html",
   "./css/style.css",
   "./manifest.webmanifest",
@@ -24,7 +23,6 @@ const CORE = [
   "./js/planificacion.js",
   "./js/amasadoras.js",
   "./js/amasadoras-ui.js",
-  "./js/orden-trabajo.js",
   "./js/configuracion.js",
 ];
 
