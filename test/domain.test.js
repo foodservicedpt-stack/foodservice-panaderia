@@ -89,7 +89,7 @@ test("valida la unidad del producto", () => {
   assert.throws(() => validateProductInput({ nombre: "Pan", unidad: "x".repeat(13) }), /unidad/);
 });
 
-import { produccionStages, getProduccionStage, isProduccionVisible, produccionTipo, forecastStock, pendingDeductions, applyConsumptionToStock } from "../js/domain.js";
+import { produccionStages, getProduccionStage, isProduccionVisible, produccionTipo, forecastStock, pendingDeductions, applyConsumptionToStock, getProduccionLifecycle, productionDayInfo } from "../js/domain.js";
 
 test("etapas y horarios de cada tipo de producción", () => {
   assert.equal(produccionStages("MASAS", "2026-09-20", "2026-09-15T10:00:00.000Z").length, 4);
@@ -188,4 +188,34 @@ test("aplica consumo sin dejar stock negativo ni descontar de más", () => {
     { fecha: "2026-09-20", cantidad: 30 },
     { fecha: "2026-09-21", cantidad: 70 },
   ]);
+});
+test("ciclo de vida: helado cierra a las 16:30 del segundo día", () => {
+  const h = { id: "h1", tipo: "HELADO", fechaInicio: "2026-09-20", estado: "PLANIFICADA", piezasProducidas: null, createdAt: "2026-09-10T10:00:00.000Z" };
+  const before = getProduccionLifecycle(h, new Date(2026, 8, 21, 10, 0));
+  assert.equal(before.active, true);
+  assert.equal(before.isSecondDay, true);
+  assert.equal(before.startLabel, "Iniciada");
+  const after = getProduccionLifecycle(h, new Date(2026, 8, 21, 17, 0));
+  assert.equal(after.active, false);
+  assert.equal(after.finished, true);
+  assert.equal(after.finishedByTime, true);
+});
+
+test("ciclo de vida: futura muestra Inicia el día", () => {
+  const h = { id: "h1", tipo: "HELADO", fechaInicio: "2026-09-21", estado: "PLANIFICADA", piezasProducidas: null, createdAt: "2026-09-10T10:00:00.000Z" };
+  const lc = getProduccionLifecycle(h, new Date(2026, 8, 20, 8, 0));
+  assert.equal(lc.startLabel, "Inicia");
+  assert.equal(lc.started, false);
+  assert.equal(lc.active, true);
+});
+
+test("ciclo de vida: el pan (MASAS) no se cierra por tiempo", () => {
+  const p = { id: "p1", tipo: "MASAS", fechaInicio: "2026-09-20", estado: "PLANIFICADA", piezasProducidas: null, createdAt: "2026-09-10T10:00:00.000Z" };
+  const lc = getProduccionLifecycle(p, new Date(2026, 8, 23, 10, 0));
+  assert.equal(lc.active, true);
+  assert.equal(lc.finished, false);
+});
+
+test("ciclo de vida: day info usa la fecha de inicio", () => {
+  assert.equal(productionDayInfo({ fechaInicio: "2026-09-20" }).fechaInicio, "2026-09-20");
 });

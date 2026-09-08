@@ -242,6 +242,63 @@ export function getProduccionStage(produccion, now = new Date()) {
   const stage = stages[index];
   return { key: stage.key, label: stage.label, index, progress, overall, stages: stages.map((s) => s.key) };
 }
+// ---------- Ciclo de vida temporal de una producción (fuente única de verdad) ----------
+// Las elaboraciones de varios días (yogur, helado, bizcocho, pan especial) se consideran
+// finalizadas a las 16:30 (hora local) del segundo día: pasan a historial y desaparecen
+// de las activas. El pan (MASAS) termina al registrar piezas.
+export const SECOND_DAY_END_HOUR = 16.5; // 16:30 hora local
+
+// Tipos que se cierran por tiempo a las 16:30 del segundo día.
+const AUTO_COMPLETE_TYPES = ["YOGUR", "HELADO", "BIZCOCHO", "PANE_ESPECIAL"];
+
+function productionCompleteAtMs(tipo, fechaInicio) {
+  const y0 = localDateMs(fechaInicio);
+  if (AUTO_COMPLETE_TYPES.includes(tipo)) return y0 + DAY + SECOND_DAY_END_HOUR * HOUR;
+  return y0 + DAY + 15.5 * HOUR; // MASAS: fin de la ventana de horneado
+}
+
+/** Devuelve el día (YYYY-MM-DD) de producción y si ya está en el segundo día. */
+export function productionDayInfo(produccion) {
+  const fechaInicio = produccion.fechaInicio || new Date().toISOString().slice(0, 10);
+  const y0 = localDateMs(fechaInicio);
+  return { fechaInicio, y0, day2Start: y0 + DAY };
+}
+
+/** Hora de inicio local (HH:MM) de la producción; se prefiere la guardada (horaInicio). */
+export function productionStartLabel(produccion) {
+  if (produccion.horaInicio && /^\d{2}:\d{2}$/.test(produccion.horaInicio)) return produccion.horaInicio;
+  return "00:00";
+}
+
+/** Ciclo de vida de una producción según el momento. Única fuente de verdad para:
+ *  - si está activa / finalizada / cancelada / confirmada
+ *  - si está en su segundo día
+ *  - si ha superado las 16:30 del segundo día (→ historial)
+ *  - etiqueta de inicio: "Iniciada" vs "Inicia el …"
+ *  Usa siempre hora local (parseDateString / localDateMs). */
+export function getProduccionLifecycle(produccion, now = new Date()) {
+  const t = (now instanceof Date ? now : new Date(now)).getTime();
+  const tipo = produccion.tipo || "MASAS";
+  const def = produccionTipo(tipo);
+  const { fechaInicio, y0, day2Start } = productionDayInfo(produccion);
+  const completeAt = productionCompleteAtMs(tipo, fechaInicio);
+  const confirmed = produccion.estado === "COMPLETADA" || (def.tracksStock && produccion.piezasProducidas != null);
+  const cancelled = produccion.estado === "CANCELADA";
+  const finishedByTime = !def.tracksStock && AUTO_COMPLETE_TYPES.includes(tipo) && t >= completeAt;
+  const visible = isProduccionVisible(produccion, def, now);
+  const finished = confirmed || cancelled || finishedByTime;
+  const active = !finished && visible;
+  const isSecondDay = t >= day2Start;
+  const started = t >= y0;
+  const stage = getProduccionStage(produccion, now);
+  return {
+    tipo, def, fechaInicio, y0, day2Start, completeAt,
+    confirmed, cancelled, finishedByTime, finished, visible, active,
+    isSecondDay, started, stage,
+    startLabel: started ? "Iniciada" : "Inicia",
+    startText: productionStartLabel(produccion),
+  };
+}
 
 
 // ---------- Previsión de stock a partir de la planificación ----------
