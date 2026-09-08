@@ -3,7 +3,7 @@ import { getProductosStock, getAmasadoras, confirmarAmasadora, cancelarProduccio
 import { getGreeting, calcCoverageDays, getStockStatus, formatCoverageDays, formatDateES, toDateString, addCalendarDays } from "./utils.js";
 import { escapeHtml, loadWithState, toast } from "./ui.js";
 import { renderAmasadorasInto } from "./amasadoras-ui.js";
-import { forecastStock, isProduccionVisible, produccionTipo, stockStatusFromForecast, getProduccionLifecycle } from "./domain.js";
+import { forecastStock, stockStatusFromForecast, getProduccionLifecycle } from "./domain.js";
 
 renderNav("dashboard.html");
 
