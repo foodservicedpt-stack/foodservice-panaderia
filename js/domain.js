@@ -299,6 +299,27 @@ export function getProduccionLifecycle(produccion, now = new Date()) {
     startText: productionStartLabel(produccion),
   };
 }
+/** Agrupa producciones por día (fechaInicio) y las ordena cronológicamente:
+ *  días ascendentes y, dentro de cada día, por hora de inicio. No usa fecha de creación. */
+export function groupProductionsByDay(amasadoras) {
+  const groups = {};
+  const order = [];
+  for (const a of amasadoras || []) {
+    const day = a.fechaInicio;
+    if (!day) continue;
+    if (!groups[day]) { groups[day] = { day, items: [] }; order.push(day); }
+    groups[day].items.push(a);
+  }
+  order.sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
+  return order.map((d) => {
+    groups[d].items.sort((x, y) => {
+      const kx = x.horaInicio || "00:00";
+      const ky = y.horaInicio || "00:00";
+      return kx < ky ? -1 : kx > ky ? 1 : 0;
+    });
+    return groups[d];
+  });
+}
 
 
 // ---------- Previsión de stock a partir de la planificación ----------

@@ -37,6 +37,8 @@
         </div>
         <label class="field-label" for="fecha-input">Fecha de producción</label>
         <input type="date" id="fecha-input" />
+        <label class="field-label" for="hora-input">Hora de inicio</label>
+        <input type="time" id="hora-input" value="08:00" />
         <div class="row">
           <button id="crear-btn">Crear</button>
           <button id="cancelar-btn" class="secondary">Cancelar</button>
@@ -47,14 +49,16 @@
     <div class="card">
       <h3>En producción</h3>
       <div id="pendientes-list"></div>
+      <details id="future-weeks" class="future-weeks" hidden>
+        <summary>Próximas semanas</summary>
+        <div id="future-weeks-body"></div>
+      </details>
     </div>
 
     <div class="card">
       <h3>Historial</h3>
-      <table>
-        <thead><tr><th>Tipo</th><th>Nombre</th><th>Fecha</th><th>Piezas</th></tr></thead>
-        <tbody id="historial-body"></tbody>
-      </table>
+      <div class="historial-tabs" id="historial-tabs" role="tablist"></div>
+      <div id="historial-body"></div>
     </div>
   </main>
 

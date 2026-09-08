@@ -1,5 +1,5 @@
 import { escapeHtml, icon } from "./ui.js";
-import { getProduccionStage, produccionTipo } from "./domain.js";
+import { getProduccionLifecycle, produccionTipo } from "./domain.js";
 import { formatDateES } from "./utils.js";
 
 const STAGE_LABELS = {
@@ -62,10 +62,12 @@ function bakeBlock(a) {
 export function amasadoraCardHtml(a, now) {
   const tipo = a.tipo || "MASAS";
   const def = produccionTipo(tipo);
-  const s = getProduccionStage(a, now);
+  const lc = getProduccionLifecycle(a, now);
+  const s = lc.stage;
   const nombre = escapeHtml(a.producto?.nombre || a.nombre || "Producto");
   const fecha = a.fechaInicio ? formatDateES(a.fechaInicio, { day: "numeric", month: "short", year: "numeric" }) : "";
-  const meta = def.visible === "DAY_BEFORE" ? `Programada para ${fecha}` : `Iniciada ${fecha}`;
+  const hora = a.horaInicio && /^\d{2}:\d{2}$/.test(a.horaInicio) ? ` a las ${escapeHtml(a.horaInicio)}` : "";
+  const meta = lc.started ? `Iniciada ${fecha}${hora}` : `Inicia el ${fecha}${hora}`;
   const stages = (s.stages && s.stages.length) ? s.stages : (FALLBACK_STAGES[tipo] || FALLBACK_STAGES.MASAS);
   const cancelled = s.key === "CANCELADA";
 
@@ -92,20 +94,30 @@ export function amasadoraCardHtml(a, now) {
   </div>`;
 }
 
-export function renderAmasadorasInto(container, amasadoras, now, { onConfirm, onCancel, onDelete }) {
-  if (!amasadoras || !amasadoras.length) { container.innerHTML = `<p class="empty">No hay producciones en curso</p>`; return; }
+function bindCardActions(container, { onConfirm, onCancel, onDelete }) {
   const saved = {};
   container.querySelectorAll("input[type=number]").forEach((i) => { saved[i.id] = i.value; });
-  container.innerHTML = amasadoras.map((a) => amasadoraCardHtml(a, now)).join("");
-  Object.entries(saved).forEach(([id, v]) => { const el = document.getElementById(id); if (el) el.value = v; });
-
   container.querySelectorAll(".confirm-btn").forEach((btn) => {
     btn.addEventListener("click", () => { const id = btn.dataset.id; const input = container.querySelector(`#piezas-${CSS.escape(id)}`); onConfirm && onConfirm(id, input ? input.value : "", btn); });
   });
-  container.querySelectorAll(".cancel-btn").forEach((btn) => {
-    btn.addEventListener("click", () => { onCancel && onCancel(btn.dataset.id, btn); });
-  });
-  container.querySelectorAll(".delete-btn").forEach((btn) => {
-    btn.addEventListener("click", () => { onDelete && onDelete(btn.dataset.id, btn); });
-  });
+  container.querySelectorAll(".cancel-btn").forEach((btn) => { btn.addEventListener("click", () => { onCancel && onCancel(btn.dataset.id, btn); }); });
+  container.querySelectorAll(".delete-btn").forEach((btn) => { btn.addEventListener("click", () => { onDelete && onDelete(btn.dataset.id, btn); }); });
+  Object.entries(saved).forEach(([id, v]) => { const el = document.getElementById(id); if (el) el.value = v; });
+}
+
+export function renderAmasadorasInto(container, amasadoras, now, handlers) {
+  if (!amasadoras || !amasadoras.length) { container.innerHTML = `<p class="empty">No hay producciones en curso</p>`; return; }
+  container.innerHTML = amasadoras.map((a) => amasadoraCardHtml(a, now)).join("");
+  bindCardActions(container, handlers);
+}
+
+export function renderAmasadorasGroups(container, groups, now, handlers) {
+  if (!groups || !groups.length) { container.innerHTML = `<p class="empty">No hay producciones en curso</p>`; return; }
+  container.innerHTML = groups.map((g) => `
+    <section class="amasadora-day-group">
+      <h4 class="amasadora-day-head">${escapeHtml(formatDateES(g.day, { weekday: "long", day: "numeric", month: "short" }))}</h4>
+      <div class="amasadora-day-list">${g.items.map((a) => amasadoraCardHtml(a, now)).join("")}</div>
+    </section>
+  `).join("");
+  bindCardActions(container, handlers);
 }

@@ -168,11 +168,12 @@ export async function getAmasadoras() {
   });
 }
 
-export async function createAmasadora({ productoId, fechaInicio, tipo, nombre }) {
+export async function createAmasadora({ productoId, fechaInicio, horaInicio, tipo, nombre }) {
   const def = produccionTipo(tipo || "MASAS");
   if (def.tracksStock && !productoId) throw new Error("Selecciona un producto");
   if (!def.tracksStock && !nombre) throw new Error("Pon un nombre a la producción");
   if (fechaInicio) parseDateString(fechaInicio);
+  if (horaInicio && !/^\d{2}:\d{2}$/.test(horaInicio)) throw new Error("Hora de inicio inválida");
   const fecha = fechaInicio ? toDateString(parseDateString(fechaInicio)) : toDateString(new Date());
   const now = new Date().toISOString();
   const data = {
@@ -180,6 +181,7 @@ export async function createAmasadora({ productoId, fechaInicio, tipo, nombre })
     tipo: def.tipo,
     nombre: nombre ? String(nombre).trim() : null,
     fechaInicio: fecha,
+    horaInicio: horaInicio && /^\d{2}:\d{2}$/.test(horaInicio) ? horaInicio : null,
     estado: "PLANIFICADA",
     piezasProducidas: null,
     createdAt: now,

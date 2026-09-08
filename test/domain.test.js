@@ -89,7 +89,7 @@ test("valida la unidad del producto", () => {
   assert.throws(() => validateProductInput({ nombre: "Pan", unidad: "x".repeat(13) }), /unidad/);
 });
 
-import { produccionStages, getProduccionStage, isProduccionVisible, produccionTipo, forecastStock, pendingDeductions, applyConsumptionToStock, getProduccionLifecycle, productionDayInfo } from "../js/domain.js";
+import { produccionStages, getProduccionStage, isProduccionVisible, produccionTipo, forecastStock, pendingDeductions, applyConsumptionToStock, getProduccionLifecycle, productionDayInfo, groupProductionsByDay } from "../js/domain.js";
 
 test("etapas y horarios de cada tipo de producción", () => {
   assert.equal(produccionStages("MASAS", "2026-09-20", "2026-09-15T10:00:00.000Z").length, 4);
@@ -218,4 +218,16 @@ test("ciclo de vida: el pan (MASAS) no se cierra por tiempo", () => {
 
 test("ciclo de vida: day info usa la fecha de inicio", () => {
   assert.equal(productionDayInfo({ fechaInicio: "2026-09-20" }).fechaInicio, "2026-09-20");
+});
+
+test("agrupa producciones por día y ordena por hora de inicio", () => {
+  const items = [
+    { id: "b", fechaInicio: "2026-09-21", horaInicio: "10:30", tipo: "PANE_ESPECIAL" },
+    { id: "a", fechaInicio: "2026-09-21", horaInicio: "07:30", tipo: "MASAS" },
+    { id: "c", fechaInicio: "2026-09-20", horaInicio: "08:00", tipo: "HELADO" },
+  ];
+  const groups = groupProductionsByDay(items);
+  assert.equal(groups.length, 2);
+  assert.equal(groups[0].day, "2026-09-20");
+  assert.deepEqual(groups[1].items.map((i) => i.id), ["a", "b"]);
 });

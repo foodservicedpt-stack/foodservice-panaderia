@@ -913,3 +913,19 @@ th {
 .confirm-row .confirm-input { width: 5.5rem; margin: 0; }
 .confirm-unit { color: var(--text-secondary); font-size: 0.875rem; }
 .confirm-row .confirm-btn { min-width: 7rem; }
+/* ===================== AMASADORAS: GRUPOS POR DÍA / HISTORIAL ===================== */
+.amasadora-day-group { margin-bottom: 1.1rem; }
+.amasadora-day-head { color: var(--text-secondary); text-transform: capitalize; font-size: 0.875rem; letter-spacing: 0.01em; margin: 0 0 0.5rem; }
+.amasadora-day-list { display: flex; flex-direction: column; gap: 0.6rem; }
+.future-week-group { margin-top: 0.6rem; border: 1px solid var(--separator); border-radius: var(--radius-md, 12px); padding: 0.5rem 0.6rem; }
+.future-week-group summary { cursor: pointer; font-weight: 600; color: var(--text-primary); }
+.future-week-days { margin-top: 0.5rem; }
+.historial-tabs { display: flex; gap: 0.4rem; overflow-x: auto; padding-bottom: 0.4rem; margin-bottom: 0.5rem; }
+.historial-tab { flex: 0 0 auto; padding: 0.35rem 0.7rem; border-radius: 999px; border: 1px solid var(--separator-strong); background: var(--surface); color: var(--text-secondary); cursor: pointer; font-size: 0.8rem; }
+.historial-tab.active { background: var(--tint-strong, var(--accent)); color: var(--on-accent, #fff); border-color: transparent; }
+.historial-item { display: flex; align-items: center; gap: 0.6rem; padding: 0.55rem 0; border-bottom: 1px solid var(--separator); font-size: 0.875rem; }
+.historial-item:last-child { border-bottom: none; }
+.historial-tipo { flex: 0 0 auto; font-size: 0.75rem; color: var(--text-secondary); }
+.historial-nombre { flex: 1 1 auto; font-weight: 600; }
+.historial-fecha { flex: 0 0 auto; color: var(--text-secondary); font-size: 0.8rem; }
+.historial-estado { flex: 0 0 auto; font-size: 0.8rem; color: var(--text-secondary); }
