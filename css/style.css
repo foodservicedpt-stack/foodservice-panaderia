@@ -929,3 +929,27 @@ th {
 .historial-nombre { flex: 1 1 auto; font-weight: 600; }
 .historial-fecha { flex: 0 0 auto; color: var(--text-secondary); font-size: 0.8rem; }
 .historial-estado { flex: 0 0 auto; font-size: 0.8rem; color: var(--text-secondary); }
+/* ===================== PLANIFICACIÓN: CALENDARIO / SEMANA MODELO ===================== */
+.page-section[hidden] { display: none !important; }
+.view-toggle { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
+.view-toggle-btn { flex: 1 1 auto; padding: 0.55rem 0.8rem; border-radius: 999px; border: 1px solid var(--separator-strong); background: var(--surface); color: var(--text-secondary); font-weight: 600; cursor: pointer; }
+.view-toggle-btn.active { background: var(--accent, #a54a26); color: var(--on-accent, #fff); border-color: transparent; }
+.semana-modelo-row { display: flex; gap: 0.5rem; margin-bottom: 0.75rem; flex-wrap: wrap; }
+.cal-grid { background: var(--surface); border: 1px solid var(--separator); border-radius: var(--radius-md, 12px); overflow: hidden; }
+.cal-weekdays { display: grid; grid-template-columns: repeat(7, 1fr); background: var(--surface-2, transparent); }
+.cal-weekday { text-align: center; padding: 0.4rem 0; font-size: 0.72rem; color: var(--text-secondary); font-weight: 700; }
+.cal-row { display: grid; grid-template-columns: repeat(7, 1fr); }
+.cal-cell { min-height: 58px; position: relative; border-top: 1px solid var(--separator); display: flex; align-items: flex-start; justify-content: center; padding: 0.35rem 0 0; }
+.cal-empty { background: transparent; }
+.cal-day { background: var(--surface); cursor: pointer; }
+.cal-day.is-today .cal-day-num { background: var(--accent, #a54a26); color: var(--on-accent, #fff); }
+.cal-day.active .cal-day-num { outline: 2px solid var(--accent, #a54a26); outline-offset: 1px; }
+.cal-day-num { font-size: 0.85rem; font-weight: 700; width: 1.4rem; height: 1.4rem; line-height: 1.4rem; text-align: center; border-radius: 999px; }
+.cal-badge { position: absolute; bottom: 0.35rem; left: 50%; transform: translateX(-50%); width: 6px; height: 6px; border-radius: 999px; background: var(--accent, #a54a26); }
+.cal-badge.amas { background: var(--text-secondary); }
+.cal-day-detail { margin-top: 0.75rem; }
+.cal-day-detail h4 { text-transform: capitalize; margin: 0 0 0.5rem; }
+.cal-detail-list { display: flex; flex-direction: column; gap: 0.35rem; }
+.cal-detail-item { display: flex; justify-content: space-between; align-items: center; padding: 0.4rem 0.5rem; border: 1px solid var(--separator); border-radius: 10px; font-size: 0.875rem; }
+.cal-detail-item.amas { background: var(--tint-soft, rgba(165,74,38,0.06)); }
+.cal-detail-item em { font-style: normal; font-size: 0.75rem; color: var(--text-secondary); }

@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Panadería · Planificación</title>
-<meta name="description" content="Planifica las cantidades de producción semana a semana." />
+<meta name="description" content="Planifica las cantidades de producción semana a semana y visualiza el calendario." />
 <link rel="stylesheet" href="css/style.css" />
 <meta name="theme-color" content="#a54a26" />
 <link rel="manifest" href="./manifest.webmanifest" />
@@ -19,8 +19,17 @@
   <a class="skip-link" href="#main">Saltar al contenido</a>
   <main id="main">
     <div id="page-status" class="page-status" role="status" aria-live="polite"></div>
-    <section class="page-section">
+    <div class="view-toggle" role="tablist" aria-label="Vista">
+      <button id="view-week" class="view-toggle-btn active" role="tab" aria-selected="true">Semana</button>
+      <button id="view-month" class="view-toggle-btn" role="tab" aria-selected="false">Calendario</button>
+    </div>
+
+    <section id="week-view" class="page-section">
       <h2>Planificación semanal</h2>
+      <div class="semana-modelo-row">
+        <button id="guardar-modelo" class="secondary">Guardar como modelo</button>
+        <button id="aplicar-modelo" class="secondary">Aplicar modelo</button>
+      </div>
       <div class="plan-head">
         <div class="plan-nav">
           <button class="icon-btn" id="prev-week" aria-label="Semana anterior">‹</button>
@@ -35,6 +44,20 @@
       <div id="plan-mobile" class="plan-mobile"></div>
       <div id="plan-desktop" class="plan-desktop"></div>
       <p class="meta-text plan-help">Introduce la cantidad total planificada para cada día. Los cambios se guardan automáticamente al salir del campo.</p>
+    </section>
+
+    <section id="month-view" class="page-section" hidden>
+      <h2>Calendario de producción</h2>
+      <div class="plan-head">
+        <div class="plan-nav">
+          <button class="icon-btn" id="prev-month" aria-label="Mes anterior">‹</button>
+          <strong id="month-label"></strong>
+          <button class="icon-btn" id="next-month" aria-label="Mes siguiente">›</button>
+        </div>
+        <button class="today-btn secondary" id="month-today">Hoy</button>
+      </div>
+      <div id="cal-grid" class="cal-grid"></div>
+      <div id="cal-day-detail" class="cal-day-detail"></div>
     </section>
   </main>
 

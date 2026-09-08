@@ -155,6 +155,18 @@ export async function savePlanificacion({ productoId, fecha, desayuno, comida, e
   await setDoc(ref, data, { merge: true });
   return { id, ...data };
 }
+// ---------- Semana modelo ----------
+const SEMANA_MODELO_DOC = "semanaModelo";
+
+export async function getSemanaModelo() {
+  const snap = await getDoc(doc(db, "config", SEMANA_MODELO_DOC));
+  return snap.exists() ? (snap.data().template || null) : null;
+}
+
+export async function saveSemanaModelo(template) {
+  await setDoc(doc(db, "config", SEMANA_MODELO_DOC), { template, updatedAt: new Date().toISOString() });
+  return template;
+}
 
 // ---------- Amasadoras ----------
 
