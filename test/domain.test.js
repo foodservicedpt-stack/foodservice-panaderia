@@ -289,3 +289,9 @@ test("valores por defecto por producto y día de la semana", () => {
   assert.equal(defaultPlanAmount("Barras blancas", 6), 50);
   assert.equal(defaultPlanAmount("Otra cosa", 0), null);
 });
+
+test("defaultPlanAmount acepta reglas personalizadas", () => {
+  const rules = [{ producto: "hogazas blancas", dias: [0, 1], cantidad: 35 }];
+  assert.equal(defaultPlanAmount("Hogazas blancas", 0, rules), 35);
+  assert.equal(defaultPlanAmount("Hogazas blancas", 2, rules), null);
+});

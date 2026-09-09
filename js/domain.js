@@ -345,10 +345,11 @@ export const DEFAULT_PLAN = Object.freeze([
 function normalizeName(s) { return String(s || "").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""); }
 
 /** Cantidad por defecto para (producto, día de la semana) o null si no aplica. */
-export function defaultPlanAmount(productName, weekdayIndex) {
+export function defaultPlanAmount(productName, weekdayIndex, rules) {
+  const list = (rules && rules.length) ? rules : DEFAULT_PLAN;
   const n = normalizeName(productName);
-  for (const d of DEFAULT_PLAN) {
-    if (n === d.producto && d.dias.includes(weekdayIndex)) return d.cantidad;
+  for (const d of list) {
+    if (n === normalizeName(d.producto) && d.dias.includes(weekdayIndex)) return d.cantidad;
   }
   return null;
 }

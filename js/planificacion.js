@@ -1,5 +1,5 @@
 import { renderNav } from "./nav.js";
-import { getPlanificacion, savePlanificacion, getAmasadoras } from "./data.js";
+import { getPlanificacion, savePlanificacion, getAmasadoras, getPlanDefaultRules } from "./data.js";
 import { addCalendarDays, getMondayOfWeek, toDateString, parseDateString, dayFull, formatDateES } from "./utils.js";
 import { escapeHtml, loadWithState, toast } from "./ui.js";
 import { getProduccionLifecycle, produccionTipo, defaultPlanAmount } from "./domain.js";
@@ -24,6 +24,7 @@ let selectedDate = toDateString(new Date());
 let monthDate = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
 let detailOpen = false;
 let planState = null; // { products, byKey, amasByDate, days }
+let planRules = null;
 
 function startOfMonth(d) { return new Date(d.getFullYear(), d.getMonth(), 1); }
 function addMonths(d, n) { return new Date(d.getFullYear(), d.getMonth() + n, 1); }
@@ -47,7 +48,7 @@ async function ensureDefaultPlan(products, byKey, weekMonday) {
     for (const p of products) {
       const key = `${p.id}_${fecha}`;
       if (byKey[key]) continue;
-      const def = defaultPlanAmount(p.nombre, i);
+      const def = defaultPlanAmount(p.nombre, i, planRules);
       if (def === null) continue;
       try { await savePlanificacion({ productoId: p.id, fecha, desayuno: 0, comida: def, extra: 0, esExcepcion: false }); } catch (err) { console.warn("[plan] default", err.message); }
       byKey[key] = { productoId: p.id, fecha, desayuno: 0, comida: def, extra: 0 };
@@ -58,7 +59,8 @@ async function ensureDefaultPlan(products, byKey, weekMonday) {
 async function load() {
   const first = startOfMonth(monthDate);
   const last = new Date(first.getFullYear(), first.getMonth() + 1, 0);
-  const [planRes, amasadoras] = await Promise.all([getPlanificacion(toDateString(first), toDateString(last)), getAmasadoras()]);
+  const [planRes, amasadoras, planRulesDb] = await Promise.all([getPlanificacion(toDateString(first), toDateString(last)), getAmasadoras(), getPlanDefaultRules()]);
+  planRules = planRulesDb;
   const byKey = {};
   planRes.planificaciones.forEach((p) => { byKey[`${p.productoId}_${p.fecha}`] = p; });
   const amasByDate = {};
@@ -88,6 +90,13 @@ function renderOverview() {
   dayStrip.querySelectorAll(".plan-day-chip").forEach((b) => b.addEventListener("click", () => selectDay(b.dataset.date)));
 }
 
+function eventsFor(fecha) {
+  const ev = [];
+  (planState.products || []).forEach((p) => { const t = dayTotal(planState.byKey[`${p.id}_${fecha}`]); if (t) ev.push({ text: `${t} ${p.nombre}`, kind: "pane" }); });
+  (planState.amasByDate[fecha] || []).forEach((a) => { const def = produccionTipo(a.tipo || "MASAS"); ev.push({ text: def.label, kind: "prod" }); });
+  return ev;
+}
+
 function renderMonthGrid() {
   const first = startOfMonth(monthDate);
   const last = new Date(first.getFullYear(), first.getMonth() + 1, 0);
@@ -101,8 +110,10 @@ function renderMonthGrid() {
   const grid = rows.map((row) => `<div class="cal-row">${row.map((d) => {
     if (!d) return `<span class="cal-cell cal-empty"></span>`;
     const fecha = toDateString(d);
-    const s = summaryFor(fecha);
-    return `<button class="cal-cell cal-day ${fecha === selectedDate ? "active" : ""} ${isToday(fecha) ? "is-today" : ""}" data-date="${fecha}"><span class="cal-day-num">${d.getDate()}</span>${(s.panes.length || s.prodCount) ? `<span class="cal-cell-summary">${s.panes.length ? `${s.panes.length} pan` : ""}${s.panes.length && s.prodCount ? " · " : ""}${s.prodCount ? `${s.prodCount} elab` : ""}</span>` : ""}</button>`;
+    const ev = eventsFor(fecha);
+    const more = ev.length > 3 ? `<span class="cal-event more">+${ev.length - 3} más</span>` : "";
+    const evs = ev.slice(0, 3).map((e) => `<span class="cal-event ${e.kind}">${escapeHtml(e.text)}</span>`).join("");
+    return `<button class="cal-cell cal-day ${fecha === selectedDate ? "active" : ""} ${isToday(fecha) ? "is-today" : ""}" data-date="${fecha}"><span class="cal-day-num">${d.getDate()}</span>${ev.length ? `<span class="cal-day-events">${evs}${more}</span>` : ""}</button>`;
   }).join("")}</div>`).join("");
   calMonth.innerHTML = head + grid;
   calMonth.querySelectorAll(".cal-day").forEach((btn) => btn.addEventListener("click", () => selectDay(btn.dataset.date)));
@@ -164,7 +175,7 @@ function renderDetail() {
   const withPlan = products.map((p) => {
     const t = dayTotal(planState.byKey[`${p.id}_${fecha}`]);
     const value = t === "" ? 0 : Number(t);
-    const primary = (t !== "" && Number(t) > 0) || defaultPlanAmount(p.nombre, wd) !== null;
+    const primary = (t !== "" && Number(t) > 0) || defaultPlanAmount(p.nombre, wd, planRules) !== null;
     return { p, value, primary };
   });
   const paneHtml = (list) => list.map(({ p, value }) => `<div class="detail-pane"><span class="detail-pane-name">${escapeHtml(p.nombre)}</span><div class="stepper" data-prod="${p.id}" data-fecha="${fecha}"><button class="step-btn" data-step="-1" aria-label="${escapeHtml(p.nombre)}: reducir">−</button><input class="stepper-input plan-input" type="number" inputmode="numeric" min="0" value="${value}" aria-label="${escapeHtml(p.nombre)}" /><button class="step-btn" data-step="1" aria-label="${escapeHtml(p.nombre)}: aumentar">＋</button></div></div>`).join("");

@@ -155,6 +155,20 @@ export async function savePlanificacion({ productoId, fecha, desayuno, comida, e
   await setDoc(ref, data, { merge: true });
   return { id, ...data };
 }
+
+// ---------- Reglas de panes (planificación por defecto) ----------
+const PLAN_RULES_DOC = "planDefault";
+
+export async function getPlanDefaultRules() {
+  const snap = await getDoc(doc(db, "config", PLAN_RULES_DOC));
+  return snap.exists() ? (snap.data().rules || null) : null;
+}
+
+export async function savePlanDefaultRules(rules) {
+  await setDoc(doc(db, "config", PLAN_RULES_DOC), { rules, updatedAt: new Date().toISOString() });
+  return rules;
+}
+
 // ---------- Amasadoras ----------
 
 export async function getAmasadoras() {

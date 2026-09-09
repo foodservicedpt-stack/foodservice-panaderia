@@ -1,7 +1,8 @@
 import { renderNav } from "./nav.js";
-import { getProductos, saveProducto } from "./data.js";
+import { getProductos, saveProducto, getPlanDefaultRules, savePlanDefaultRules } from "./data.js";
 import { enablePushNotifications, disablePushNotifications } from "./push.js";
 import { escapeHtml, loadWithState, toast } from "./ui.js";
+import { DEFAULT_PLAN } from "./domain.js";
 
 renderNav("configuracion.html");
 
@@ -159,4 +160,47 @@ document.getElementById("notificaciones-desactivar")?.addEventListener("click", 
 });
 
 refreshNotificationState();
+
+// --- Reglas de panes (plan por defecto) ---
+const REGLAS_DAY_LABELS = ["L", "M", "X", "J", "V", "S", "D"];
+let reglas = null;
+function drawReglas(rules) {
+  reglas = rules;
+  const listEl = document.getElementById("reglas-list");
+  if (!listEl) return;
+  listEl.innerHTML = reglas.map((r, i) => `
+    <div class="regla-row" data-i="${i}">
+      <input class="regla-producto" value="${escapeHtml(r.producto)}" aria-label="Producto de la regla" />
+      <div class="regla-dias">${REGLAS_DAY_LABELS.map((d, di) => `<label class="regla-dia"><input type="checkbox" data-di="${di}" ${r.dias && r.dias.includes(di) ? "checked" : ""} /><span>${d}</span></label>`).join("")}</div>
+      <input class="regla-cant" type="number" min="0" value="${r.cantidad}" aria-label="Cantidad por día" />
+      <button class="ghost small regla-del" aria-label="Eliminar regla">✕</button>
+    </div>
+  `).join("");
+  listEl.querySelectorAll(".regla-del").forEach((b) => b.addEventListener("click", () => { reglas.splice(Number(b.closest(".regla-row").dataset.i), 1); drawReglas(reglas); }));
+}
+async function renderReglas() {
+  const listEl = document.getElementById("reglas-list");
+  if (!listEl) return;
+  const stored = await getPlanDefaultRules();
+  const base = (stored && stored.length) ? stored : DEFAULT_PLAN.map((r) => ({ producto: r.producto, dias: [...r.dias], cantidad: r.cantidad }));
+  drawReglas(base);
+}
+document.getElementById("reglas-add")?.addEventListener("click", () => { reglas = reglas || []; reglas.push({ producto: "", dias: [0, 1, 2, 3, 4], cantidad: 0 }); drawReglas(reglas); });
+document.getElementById("reglas-save")?.addEventListener("click", async () => {
+  const listEl = document.getElementById("reglas-list");
+  if (!listEl) return;
+  const out = [];
+  listEl.querySelectorAll(".regla-row").forEach((row) => {
+    const producto = row.querySelector(".regla-producto").value.trim().toLowerCase();
+    const dias = [...row.querySelectorAll(".regla-dia input:checked")].map((c) => Number(c.dataset.di));
+    const cantidad = Number(row.querySelector(".regla-cant").value) || 0;
+    if (producto) out.push({ producto, dias, cantidad });
+  });
+  const btn = document.getElementById("reglas-save");
+  btn.disabled = true;
+  try { await savePlanDefaultRules(out); toast("Reglas guardadas", "success"); }
+  catch (err) { toast("Error: " + err.message, "error"); }
+  finally { btn.disabled = false; }
+});
+renderReglas();
 loadWithState(document.getElementById("page-status"), load);
