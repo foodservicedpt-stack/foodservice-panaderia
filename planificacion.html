@@ -38,17 +38,17 @@
       </div>
 
       <!-- NIVEL 2: DETALLE DEL DÍA -->
-      <div id="plan-detail" class="plan-detail" hidden>
+      <div id="plan-detail" class="plan-detail" role="dialog" aria-modal="true" aria-label="Detalle de planificación del día" tabindex="-1" hidden>
         <div class="plan-detail-head">
           <button id="detail-back" class="ghost">‹ Volver</button>
           <div class="plan-detail-days">
             <button id="detail-prev" class="icon-btn" aria-label="Día anterior">‹</button>
-            <strong id="detail-date"></strong>
+            <strong id="detail-date" aria-live="polite"></strong>
             <button id="detail-next" class="icon-btn" aria-label="Día siguiente">›</button>
           </div>
         </div>
-        <div class="cal-detail-section"><h5>Panes de consumo</h5><div id="detail-panes"></div></div>
-        <div class="cal-detail-section"><h5>Otras producciones del día</h5><div id="detail-productions"></div></div>
+        <div class="cal-detail-section"><h4>Panes de consumo</h4><div id="detail-panes"></div></div>
+        <div class="cal-detail-section"><h4>Otras producciones del día</h4><div id="detail-productions"></div></div>
         <a href="amasadoras.html" class="add-elaboration">＋ Añadir elaboración</a>
       </div>
     </section>

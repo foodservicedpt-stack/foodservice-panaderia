@@ -131,33 +131,46 @@ function selectDay(fecha) {
   openDetail();
 }
 
+let savedScroll = 0;
 function openDetail() {
   detailOpen = true;
+  savedScroll = window.scrollY;
   overviewEl.hidden = true;
+  overviewEl.setAttribute("aria-hidden", "true");
   detailEl.hidden = false;
-  scrollTo(0, 0);
+  detailEl.scrollTop = 0;
   renderDetail();
+  try { detailEl.focus({ preventScroll: true }); } catch (err) { /* ignore */ }
 }
 function closeDetail() {
   detailOpen = false;
   detailEl.hidden = true;
+  overviewEl.setAttribute("aria-hidden", "false");
   overviewEl.hidden = false;
-  loadWithState(document.getElementById("page-status"), load);
+  loadWithState(document.getElementById("page-status"), load).finally(() => window.scrollTo(0, savedScroll));
 }
+document.addEventListener("keydown", (e) => { if (e.key === "Escape" && detailOpen) closeDetail(); });
 
 document.getElementById("detail-back").addEventListener("click", closeDetail);
-async function moveDetailDay(delta) { selectedDate = toDateString(addCalendarDays(parseDateString(selectedDate), delta)); week = getMondayOfWeek(parseDateString(selectedDate)); await ensureDefaultPlan(planState.products, planState.byKey, week); renderDetail(); }
+async function moveDetailDay(delta) { selectedDate = toDateString(addCalendarDays(parseDateString(selectedDate), delta)); week = getMondayOfWeek(parseDateString(selectedDate)); await ensureDefaultPlan(planState.products, planState.byKey, week); detailEl.scrollTop = 0; renderDetail(); }
 document.getElementById("detail-prev").addEventListener("click", () => moveDetailDay(-1));
 document.getElementById("detail-next").addEventListener("click", () => moveDetailDay(1));
 
 function renderDetail() {
   const fecha = selectedDate;
   detailDateEl.textContent = formatDateES(fecha, { weekday: "long", day: "numeric", month: "long" });
-  detailPanesEl.innerHTML = (planState.products || []).map((p) => {
+  const wd = weekdayIndex(parseDateString(fecha));
+  const products = planState.products || [];
+  const withPlan = products.map((p) => {
     const t = dayTotal(planState.byKey[`${p.id}_${fecha}`]);
     const value = t === "" ? 0 : Number(t);
-    return `<div class="detail-pane"><span class="detail-pane-name">${escapeHtml(p.nombre)}</span><div class="stepper" data-prod="${p.id}" data-fecha="${fecha}"><button class="step-btn" data-step="-1" aria-label="Reducir">−</button><input class="stepper-input plan-input" type="number" min="0" value="${value}" aria-label="${escapeHtml(p.nombre)}" /><button class="step-btn" data-step="1" aria-label="Aumentar">＋</button></div></div>`;
-  }).join("");
+    const primary = (t !== "" && Number(t) > 0) || defaultPlanAmount(p.nombre, wd) !== null;
+    return { p, value, primary };
+  });
+  const paneHtml = (list) => list.map(({ p, value }) => `<div class="detail-pane"><span class="detail-pane-name">${escapeHtml(p.nombre)}</span><div class="stepper" data-prod="${p.id}" data-fecha="${fecha}"><button class="step-btn" data-step="-1" aria-label="${escapeHtml(p.nombre)}: reducir">−</button><input class="stepper-input plan-input" type="number" inputmode="numeric" min="0" value="${value}" aria-label="${escapeHtml(p.nombre)}" /><button class="step-btn" data-step="1" aria-label="${escapeHtml(p.nombre)}: aumentar">＋</button></div></div>`).join("");
+  const primary = withPlan.filter((x) => x.primary);
+  const rest = withPlan.filter((x) => !x.primary);
+  detailPanesEl.innerHTML = paneHtml(primary) + (rest.length ? `<details class="detail-others"><summary>Otros productos (${rest.length})</summary>${paneHtml(rest)}</details>` : "");
   const prods = (planState.amasByDate[fecha] || []).map((a) => { const def = produccionTipo(a.tipo || "MASAS"); const lc = getProduccionLifecycle(a); return { nombre: a.producto?.nombre || a.nombre || def.label, hora: a.horaInicio || "", meta: lc.stage.key, label: def.label }; });
   detailProdsEl.innerHTML = prods.length ? prods.map((it) => `<div class="detail-prod"><span class="detail-prod-name">${escapeHtml(it.nombre)}</span><span class="detail-prod-meta">${it.hora ? `${escapeHtml(it.hora)} · ` : ""}${escapeHtml(it.label || it.meta)}</span></div>`).join("") : `<p class="empty">Sin producciones este día</p>`;
 }

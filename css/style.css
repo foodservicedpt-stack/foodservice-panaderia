@@ -5,6 +5,7 @@
    ===================================================================== */
 
 :root {
+  --header-h: 56px; /* altura del header sticky (usada por el detalle de planificación) */
   /* ---- Brand / interactive tint (terracotta — verified ≥4.5:1 w/ white) ---- */
   --action: #a54a26;            /* filled buttons, active states  (white text 5.82:1) */
   --action-hover: #8f3f1f;
@@ -747,13 +748,13 @@ th {
 .plan-nav-current strong { display: block; font-size: 1.05rem; letter-spacing: -0.02em; }
 .plan-nav-sub { color: var(--text-hint); font-size: 0.8rem; }
 .icon-btn {
-  width: 40px; height: 40px; min-width: 40px; min-height: 40px; padding: 0;
+  width: 44px; height: 44px; min-width: 44px; min-height: 44px; padding: 0;
   background: var(--surface-raised); color: var(--text-secondary);
   border: 1px solid var(--separator-strong); box-shadow: none;
   font-size: 1.5rem; line-height: 1; border-radius: var(--radius-full);
 }
 .icon-btn:hover { background: var(--tint-soft); border-color: transparent; color: var(--action); }
-.today-btn { padding: 9px 16px; min-height: 40px; font-size: 0.85rem; }
+.today-btn { padding: 9px 16px; min-height: 44px; font-size: 0.85rem; }
 
 /* ===== Planificación: vista móvil (por día) ===== */
 .plan-desktop { display: none; }
@@ -766,7 +767,7 @@ th {
   background: var(--surface-raised); color: var(--text-secondary);
   border: 1px solid var(--separator); box-shadow: none; min-height: 0;
 }
-.plan-day-chip span { font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-tertiary); }
+.plan-day-chip span { font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-secondary); }
 .plan-day-chip strong { font-size: 0.98rem; color: var(--text-primary); }
 .plan-day-chip:hover { background: var(--surface-raised); border-color: var(--action); }
 .plan-day-chip.active { background: var(--action); border-color: transparent; color: #fff; }
@@ -944,7 +945,10 @@ th {
 .cal-week-summary { flex: 1 1 auto; color: var(--text-secondary); font-size: 0.78rem; }
 .cal-week-arrow { flex: 0 0 auto; color: var(--text-secondary); font-size: 1.2rem; }
 .cal-detail-section { margin-top: 0.75rem; }
-.cal-detail-section h5 { margin: 0 0 0.4rem; font-size: 0.85rem; color: var(--text-secondary); }
+.cal-detail-section h4, .cal-detail-section h5 { margin: 0 0 0.4rem; font-size: 0.85rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.03em; }
+.detail-others { margin-top: 0.4rem; }
+.detail-others summary { cursor: pointer; font-size: 0.8rem; color: var(--text-secondary); padding: 0.3rem 0; }
+.detail-others .detail-pane { min-height: 44px; }
 .cal-detail-item.pane input.plan-input { width: 5rem; margin: 0; }
 @media (max-width: 767px) { .cal-month { display: none; } }
 @media (min-width: 768px) { .cal-week { display: none; } }
@@ -967,8 +971,9 @@ th {
 .cal-detail-item em { font-style: normal; font-size: 0.75rem; color: var(--text-secondary); }
 /* ===================== PLANIFICACIÓN MÓVIL: VISTA SEMANAL + DETALLE ===================== */
 .cal-month[hidden], .cal-week[hidden], .plan-detail[hidden], #plan-overview[hidden] { display: none !important; }
-.plan-day-chip { display: flex; flex-direction: column; align-items: center; gap: 0.1rem; min-width: 44px; min-height: 48px; padding: 0.3rem 0.4rem; border: 1px solid var(--separator-strong); border-radius: 12px; background: var(--surface); cursor: pointer; }
-.plan-day-chip.is-today { border-color: var(--action); }
+.plan-day-chip { position: relative; display: flex; flex-direction: column; align-items: center; gap: 0.1rem; min-width: 44px; min-height: 48px; padding: 0.3rem 0.4rem; border: 1px solid var(--separator-strong); border-radius: 12px; background: var(--surface); cursor: pointer; }
+.plan-day-chip.is-today { border-color: var(--action); background: var(--tint-soft, rgba(165,74,38,0.06)); }
+.plan-day-chip.is-today::after { content: ""; position: absolute; bottom: 3px; left: 50%; transform: translateX(-50%); width: 6px; height: 6px; border-radius: 999px; background: var(--action); }
 .plan-today-tag { all: unset; font-size: 0.55rem; font-weight: 700; letter-spacing: 0.05em; color: var(--action); text-transform: uppercase; }
 .plan-day-card { display: flex; flex-direction: column; gap: 0.25rem; width: 100%; text-align: left; padding: 0.7rem 0.8rem; background: var(--surface); border: 1px solid var(--separator); border-radius: 14px; cursor: pointer; position: relative; }
 .plan-day-card.active { border-color: var(--action); }
@@ -987,9 +992,9 @@ th {
 .detail-pane { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; padding: 0.55rem 0; border-bottom: 1px solid var(--separator); }
 .detail-pane-name { font-weight: 600; font-size: 0.95rem; }
 .stepper { display: flex; align-items: center; gap: 0.25rem; }
-.step-btn { width: 40px; height: 40px; border-radius: 12px; border: 1px solid var(--separator-strong); background: var(--surface); color: var(--action); font-size: 1.2rem; font-weight: 700; cursor: pointer; }
+.step-btn { width: 44px; height: 44px; border-radius: 12px; border: 1px solid var(--separator-strong); background: var(--surface); color: var(--action); font-size: 1.2rem; font-weight: 700; cursor: pointer; }
 .step-btn:active { background: var(--tint-soft, rgba(165,74,38,0.08)); }
-.stepper-input { width: 48px; text-align: center; font-weight: 700; font-size: 1rem; height: 40px; border: 1px solid var(--separator-strong); border-radius: 12px; }
+.stepper-input { width: 52px; text-align: center; font-weight: 700; font-size: 1rem; height: 44px; border: 1px solid var(--separator-strong); border-radius: 12px; }
 .detail-prod { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; padding: 0.55rem 0.6rem; border: 1px solid var(--separator); border-radius: 12px; margin-bottom: 0.4rem; font-size: 0.875rem; }
 .detail-prod-name { font-weight: 600; }
 .detail-prod-meta { font-size: 0.75rem; color: var(--text-secondary); }
