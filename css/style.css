@@ -979,7 +979,7 @@ th {
 .plan-day-card-panes { font-size: 0.8rem; color: var(--text-primary); }
 .plan-day-card-meta { font-size: 0.75rem; color: var(--text-secondary); }
 .plan-day-card-arrow { position: absolute; right: 0.8rem; top: 50%; transform: translateY(-50%); color: var(--text-tertiary); font-size: 1.1rem; }
-.plan-detail { position: fixed; inset: 0; z-index: 60; background: var(--surface-solid, #fbf7f0); overflow-y: auto; padding: 1rem 1rem calc(5.2rem + var(--sat, 0px)); }
+.plan-detail { position: fixed; inset: 0; z-index: 60; background: var(--surface-solid, #fbf7f0); overflow-y: auto; padding: calc(var(--header-h, 64px) + 0.75rem) 1rem calc(5.2rem + var(--sat, 0px)); }
 .plan-detail-head { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 0.5rem; }
 .plan-detail-head .ghost { align-self: flex-start; font-weight: 600; }
 .plan-detail-days { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
